@@ -7,6 +7,4 @@
  * file that was distributed with this source code.
  */
 
-export { Disk } from './src/disk.js'
-export * as errors from './src/errors.js'
-export { KeyNormalizer } from './src/key_normalizer.js'
+export { FSDriver } from './driver.js'

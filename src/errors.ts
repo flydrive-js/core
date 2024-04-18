@@ -1,7 +1,7 @@
 /*
- * @adonisjs/drive
+ * @flydrive/core
  *
- * (c) AdonisJS
+ * (c) FlyDrive
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -25,13 +25,13 @@ export const E_CANNOT_READ_FILE = createError<[key: string]>(
   'E_CANNOT_READ_FILE'
 )
 
-// /**
-//  * Unable to delete file
-//  */
-// export const E_CANNOT_DELETE_FILE = createError<[key: string]>(
-//   'Cannot delete file at location "%s"',
-//   'E_CANNOT_DELETE_FILE'
-// )
+/**
+ * Unable to delete file
+ */
+export const E_CANNOT_DELETE_FILE = createError<[key: string]>(
+  'Cannot delete file at location "%s"',
+  'E_CANNOT_DELETE_FILE'
+)
 
 // /**
 //  * Unable to delete directory
@@ -41,21 +41,21 @@ export const E_CANNOT_READ_FILE = createError<[key: string]>(
 //   'E_CANNOT_DELETE_FILE'
 // )
 
-// /**
-//  * Unable to copy file
-//  */
-// export const E_CANNOT_COPY_FILE = createError<[source: string, destination: string]>(
-//   'Cannot copy file from "%s" to "%s"',
-//   'E_CANNOT_COPY_FILE'
-// )
+/**
+ * Unable to copy file
+ */
+export const E_CANNOT_COPY_FILE = createError<[source: string, destination: string]>(
+  'Cannot copy file from "%s" to "%s"',
+  'E_CANNOT_COPY_FILE'
+)
 
-// /**
-//  * Unable to move file
-//  */
-// export const E_CANNOT_MOVE_FILE = createError<[source: string, destination: string]>(
-//   'Cannot move file from "%s" to "%s"',
-//   'E_CANNOT_MOVE_FILE'
-// )
+/**
+ * Unable to move file
+ */
+export const E_CANNOT_MOVE_FILE = createError<[source: string, destination: string]>(
+  'Cannot move file from "%s" to "%s"',
+  'E_CANNOT_MOVE_FILE'
+)
 
 // /**
 //  * Unable to check the location of the file
@@ -65,13 +65,13 @@ export const E_CANNOT_READ_FILE = createError<[key: string]>(
 //   'E_CANNOT_CHECK_FILE_EXISTENCE'
 // )
 
-// /**
-//  * Unable to get file metadata
-//  */
-// export const E_CANNOT_GET_METADATA = createError<[action: string, key: string]>(
-//   'Unable to perform action "%s" on file at location "%s"',
-//   'E_CANNOT_GET_METADATA'
-// )
+/**
+ * Unable to get file metadata
+ */
+export const E_CANNOT_GET_METADATA = createError<[key: string]>(
+  'Unable to retrieve metadata of file at location "%s"',
+  'E_CANNOT_GET_METADATA'
+)
 
 // /**
 //  * Unable to set file visibility

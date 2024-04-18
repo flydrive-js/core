@@ -13,7 +13,9 @@
   ],
   "exports": {
     ".": "./build/index.js",
-    "./types": "./build/src/types.js"
+    "./types": "./build/src/types.js",
+    "./fs": "./build/drivers/fs/main.js",
+    "./types/fs": "./build/drivers/fs/types.js"
   },
   "scripts": {
     "clean": "del-cli build",
@@ -25,7 +27,7 @@
     "pretest": "npm run lint",
     "test": "c8 npm run quick:test",
     "prebuild": "npm run lint && npm run clean",
-    "build": "tsc",
+    "build": "tsup-node && tsc --emitDeclarationOnly --declaration",
     "postbuild": "npm run copy:templates",
     "release": "np",
     "version": "npm run build",
@@ -61,6 +63,7 @@
     "np": "^10.0.0",
     "prettier": "^3.2.5",
     "ts-node": "^10.9.2",
+    "tsup": "^8.0.2",
     "typescript": "^5.4.2"
   },
   "publishConfig": {
@@ -91,5 +94,19 @@
     "@poppinss/utils": "^6.7.3",
     "etag": "^1.8.1",
     "mime-types": "^2.1.35"
+  },
+  "tsup": {
+    "entry": [
+      "./index.ts",
+      "./src/types.ts",
+      "./drivers/fs/main.ts",
+      "./drivers/fs/types.ts"
+    ],
+    "outDir": "./build",
+    "clean": true,
+    "format": "esm",
+    "dts": false,
+    "sourcemap": true,
+    "target": "esnext"
   }
 }
