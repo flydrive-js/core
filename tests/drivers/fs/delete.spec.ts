@@ -50,7 +50,7 @@ test.group('FS Driver | delete', () => {
     await fdfs.put(key, contents)
     await assert.rejects(async () => {
       await fdfs.delete('foo')
-    }, /EPERM: operation not permitted/)
+    }, /EPERM: operation not permitted|EISDIR: illegal operation on a direct/)
 
     await assert.fileExists(key)
   })

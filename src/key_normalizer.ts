@@ -7,8 +7,8 @@
  * file that was distributed with this source code.
  */
 
-import { normalize } from 'node:path'
 import { slash } from '@poppinss/utils'
+import { normalize } from 'node:path/posix'
 import string from '@poppinss/utils/string'
 
 import * as errors from './errors.js'
