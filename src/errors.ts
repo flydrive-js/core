@@ -12,18 +12,18 @@ import { createError } from '@poppinss/utils'
 /**
  * Unable to write file to the destination
  */
-// export const E_CANNOT_WRITE_FILE = createError<[key: string]>(
-//   'Cannot write file at location "%s"',
-//   'E_CANNOT_WRITE_FILE'
-// )
+export const E_CANNOT_WRITE_FILE = createError<[key: string]>(
+  'Cannot write file at location "%s"',
+  'E_CANNOT_WRITE_FILE'
+)
 
-// /**
-//  * Unable to read file
-//  */
-// export const E_CANNOT_READ_FILE = createError<[key: string]>(
-//   'Cannot read file from location "%s"',
-//   'E_CANNOT_READ_FILE'
-// )
+/**
+ * Unable to read file
+ */
+export const E_CANNOT_READ_FILE = createError<[key: string]>(
+  'Cannot read file from location "%s"',
+  'E_CANNOT_READ_FILE'
+)
 
 // /**
 //  * Unable to delete file
