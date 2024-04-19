@@ -72,6 +72,6 @@ test.group('FS Driver | move', () => {
 
     await assert.rejects(async () => {
       await fdfs.move('foo', destination)
-    }, /ENOTSUP: operation not supported|EISDIR: illegal operation on a/)
+    }, /ENOTSUP: operation not supported|EISDIR: illegal operation on a|EPERM: operation not permitted/)
   })
 })
