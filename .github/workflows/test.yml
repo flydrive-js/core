@@ -25,6 +25,8 @@ jobs:
 
   tests:
     runs-on: ${{ matrix.os }}
+    concurrency:
+      group: test
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
@@ -47,6 +49,8 @@ jobs:
           GCS_FINE_GRAINED_ACL_BUCKET: drive-gcs-no-uniform-acl
   windows:
     runs-on: windows-latest
+    concurrency:
+      group: test
     strategy:
       matrix:
         node-version:
