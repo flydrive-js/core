@@ -102,4 +102,9 @@ export interface DriverContract {
    * error when file does not exist in first place
    */
   delete(key: string): Promise<void>
+
+  /**
+   * Delete the files and directories matching the provided prefix.
+   */
+  deleteAll(prefix: string): Promise<void>
 }

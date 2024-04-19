@@ -185,4 +185,16 @@ export class FSDriver implements DriverContract {
       }
     })
   }
+
+  /**
+   * Deletes the files and directories matching the provided
+   * prefix. The method is same as running "rm -rf" unix
+   * command
+   */
+  deleteAll(prefix: string): Promise<void> {
+    const location = join(this.#rootUrl, prefix)
+    return this.#retrier.retry(async () => {
+      return fsp.rm(location, { recursive: true, force: true })
+    })
+  }
 }
