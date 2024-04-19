@@ -256,6 +256,6 @@ test.group('GCS Driver | putStream', (group) => {
 
     await assert.rejects(async () => {
       await fdfs.putStream(key, createReadStream(join(fs.basePath, key)))
-    }, /No such object/)
+    }, /ENOENT: no such file or directory/)
   })
 })
