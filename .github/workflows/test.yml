@@ -23,10 +23,8 @@ jobs:
       - name: Run typecheck
         run: npm run typecheck
 
-  tests-fs:
+  tests-main:
     runs-on: ${{ matrix.os }}
-    concurrency:
-      group: fs
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
