@@ -74,7 +74,7 @@ test.group('GCS Driver | delete', (group) => {
     assert.isFalse(existsResponse[0])
   })
 
-  test('throw error when trying to delete a directory', async ({ assert }) => {
+  test('noop when trying to delete a directory', async ({ assert }) => {
     const key = `foo/bar/${string.random(6)}.txt`
     const contents = 'Hello world'
 
@@ -85,6 +85,13 @@ test.group('GCS Driver | delete', (group) => {
     })
 
     await fdgcs.put(key, contents)
+
+    /**
+     * GCS consider it as a 404 call and hence no error is raised
+     */
     await fdgcs.delete('foo/')
+
+    const existsResponse = await bucket.file(key).exists()
+    assert.isTrue(existsResponse[0])
   })
 })
