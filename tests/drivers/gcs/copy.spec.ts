@@ -32,6 +32,7 @@ test.group('GCS Driver | copy', (group) => {
     }
   })
   group.each.timeout(10_000)
+  group.tap((t) => t.pin())
 
   test('copy file from source to the destination', async ({ assert }) => {
     const source = `${string.random(6)}.txt`
