@@ -7,6 +7,7 @@ on:
 jobs:
   lint:
     runs-on: ubuntu-latest
+    environment: development
     steps:
       - uses: actions/checkout@v4
       - name: Install
@@ -16,6 +17,7 @@ jobs:
 
   typecheck:
     runs-on: ubuntu-latest
+    environment: development
     steps:
       - uses: actions/checkout@v4
       - name: Install
@@ -25,6 +27,7 @@ jobs:
 
   tests:
     runs-on: ${{ matrix.os }}
+    environment: development
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
@@ -43,6 +46,7 @@ jobs:
         run: npm test
   windows:
     runs-on: windows-latest
+    environment: development
     strategy:
       matrix:
         node-version:
