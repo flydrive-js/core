@@ -28,7 +28,6 @@ test.group('GCS Driver | getMetaData', (group) => {
     }
   })
   group.each.timeout(10_000)
-  group.tap((t) => t.pin())
 
   test('get metaData of a file', async ({ assert }) => {
     const key = `${string.random(6)}.txt`

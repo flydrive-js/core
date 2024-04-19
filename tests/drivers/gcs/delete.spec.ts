@@ -28,7 +28,6 @@ test.group('GCS Driver | delete', (group) => {
     }
   })
   group.each.timeout(10_000)
-  group.tap((t) => t.pin())
 
   test('delete file', async ({ assert }) => {
     const key = `${string.random(6)}.txt`
