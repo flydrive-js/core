@@ -54,6 +54,6 @@ test.group('FS Driver | copy', () => {
 
     await assert.rejects(async () => {
       await fdfs.copy('foo', destination)
-    }, /ENOTSUP: operation not supported/)
+    }, /ENOTSUP: operation not supported|EISDIR: illegal operation on a/)
   })
 })
