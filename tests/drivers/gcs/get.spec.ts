@@ -7,8 +7,9 @@
  * file that was distributed with this source code.
  */
 
-import { test } from '@japa/runner'
 import getStream from 'get-stream'
+import { test } from '@japa/runner'
+import string from '@poppinss/utils/string'
 import { Storage } from '@google-cloud/storage'
 import { GCS_BUCKET, GCS_KEY } from '../../helpers.js'
 import { GCSDriver } from '../../../drivers/gcs/driver.js'
@@ -30,7 +31,7 @@ test.group('GCS Driver | get', (group) => {
   group.each.timeout(10_000)
 
   test('get file contents as a string', async ({ assert }) => {
-    const key = 'hello.txt'
+    const key = `${string.random(6)}.txt`
     const contents = 'Hello world'
 
     const fdgcs = new GCSDriver({
@@ -45,7 +46,7 @@ test.group('GCS Driver | get', (group) => {
   })
 
   test('return error when file does not exist', async ({ assert }) => {
-    const key = 'hello.txt'
+    const key = `${string.random(6)}.txt`
     const fdgcs = new GCSDriver({
       visibility: 'public',
       bucket: GCS_BUCKET,
@@ -68,7 +69,7 @@ test.group('GCS Driver | getArrayBuffer', (group) => {
   group.each.timeout(10_000)
 
   test('get file contents as an arrayBuffer', async ({ assert }) => {
-    const key = 'hello.txt'
+    const key = `${string.random(6)}.txt`
     const contents = 'Hello world'
 
     const fdgcs = new GCSDriver({
@@ -83,7 +84,7 @@ test.group('GCS Driver | getArrayBuffer', (group) => {
   })
 
   test('return error when file does not exist', async ({ assert }) => {
-    const key = 'hello.txt'
+    const key = `${string.random(6)}.txt`
     const fdgcs = new GCSDriver({
       visibility: 'public',
       bucket: GCS_BUCKET,
@@ -106,7 +107,7 @@ test.group('GCS Driver | getStream', (group) => {
   group.each.timeout(10_000)
 
   test('get file contents as a stream', async ({ assert }) => {
-    const key = 'hello.txt'
+    const key = `${string.random(6)}.txt`
     const contents = 'Hello world'
 
     const fdgcs = new GCSDriver({
@@ -121,7 +122,7 @@ test.group('GCS Driver | getStream', (group) => {
   })
 
   test('return error when file does not exist', async ({ assert }) => {
-    const key = 'hello.txt'
+    const key = `${string.random(6)}.txt`
     const fdgcs = new GCSDriver({
       visibility: 'public',
       bucket: GCS_BUCKET,

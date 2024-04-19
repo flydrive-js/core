@@ -20,18 +20,22 @@ import { GCS_BUCKET, GCS_FINE_GRAINED_ACL_BUCKET, GCS_KEY } from '../../helpers.
 const bucket = new Storage({
   credentials: GCS_KEY,
 }).bucket(GCS_BUCKET)
+const noUniformedAclBucket = new Storage({
+  credentials: GCS_KEY,
+}).bucket(GCS_FINE_GRAINED_ACL_BUCKET)
 
 test.group('GCS Driver | copy', (group) => {
   group.each.setup(() => {
     return async () => {
       await bucket.deleteFiles()
+      await noUniformedAclBucket.deleteFiles()
     }
   })
   group.each.timeout(10_000)
 
   test('copy file from source to the destination', async ({ assert }) => {
-    const source = 'hello.txt'
-    const destination = 'hi.txt'
+    const source = `${string.random(6)}.txt`
+    const destination = `${string.random(6)}.txt`
     const contents = 'Hello world'
 
     const fdgcs = new GCSDriver({
@@ -47,8 +51,8 @@ test.group('GCS Driver | copy', (group) => {
   })
 
   test('copy file from source to a nested directory', async ({ assert }) => {
-    const source = 'hello.txt'
-    const destination = 'foo/bar/baz/hi.txt'
+    const source = `${string.random(6)}.txt`
+    const destination = `foo/bar/baz/${string.random(6)}.txt`
     const contents = 'Hello world'
 
     const fdgcs = new GCSDriver({
@@ -64,8 +68,8 @@ test.group('GCS Driver | copy', (group) => {
   })
 
   test('return error when source file does not exist', async ({ assert }) => {
-    const source = 'hello.txt'
-    const destination = 'hi.txt'
+    const source = `${string.random(6)}.txt`
+    const destination = `${string.random(6)}.txt`
 
     const fdgcs = new GCSDriver({
       visibility: 'public',
@@ -84,9 +88,6 @@ test.group('GCS Driver | copy', (group) => {
     const contents = 'Hello world'
 
     const fdgcs = new GCSDriver({
-      storage: new Storage({
-        credentials: GCS_KEY,
-      }),
       visibility: 'public',
       bucket: GCS_FINE_GRAINED_ACL_BUCKET,
       credentials: GCS_KEY,
@@ -95,7 +96,6 @@ test.group('GCS Driver | copy', (group) => {
 
     await fdgcs.put(source, contents, {
       contentType: 'image/png',
-      cacheControl: 'no-cache',
       visibility: 'private',
     })
 
@@ -104,5 +104,8 @@ test.group('GCS Driver | copy', (group) => {
 
     assert.equal(metaData.visibility, 'private')
     assert.equal(metaData.contentType, 'image/png')
+
+    const existsResponse = await noUniformedAclBucket.file(source).exists()
+    assert.isTrue(existsResponse[0])
   })
 })

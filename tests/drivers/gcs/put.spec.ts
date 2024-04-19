@@ -10,6 +10,7 @@
 import { join } from 'node:path'
 import { test } from '@japa/runner'
 import { createReadStream } from 'node:fs'
+import string from '@poppinss/utils/string'
 import { Storage } from '@google-cloud/storage'
 import { GCSDriver } from '../../../drivers/gcs/driver.js'
 import { GCS_BUCKET, GCS_FINE_GRAINED_ACL_BUCKET, GCS_KEY } from '../../helpers.js'
@@ -29,12 +30,13 @@ test.group('GCS Driver | put', (group) => {
   group.each.setup(() => {
     return async () => {
       await bucket.deleteFiles()
+      await noUniformedAclBucket.deleteFiles()
     }
   })
   group.each.timeout(10_000)
 
   test('create file at the destination', async ({ assert }) => {
-    const key = 'hello.txt'
+    const key = `${string.random(10)}.txt`
     const contents = 'Hello world'
 
     const fdfs = new GCSDriver({
@@ -54,7 +56,7 @@ test.group('GCS Driver | put', (group) => {
   })
 
   test('create file from Uint8Array', async ({ assert }) => {
-    const key = 'hello.txt'
+    const key = `${string.random(10)}.txt`
     const contents = 'Hello world'
 
     const fdfs = new GCSDriver({
@@ -74,7 +76,7 @@ test.group('GCS Driver | put', (group) => {
   })
 
   test('overwrite contents of existing file', async ({ assert }) => {
-    const key = 'hello.txt'
+    const key = `${string.random(10)}.txt`
     const contents = 'Hello world'
     const newContents = 'Hi world'
 
@@ -96,7 +98,7 @@ test.group('GCS Driver | put', (group) => {
   })
 
   test('create files at a nested destination', async ({ assert }) => {
-    const key = 'users/1/hello.txt'
+    const key = `users/1/${string.random(10)}.txt`
     const contents = 'Hello world'
 
     const fdfs = new GCSDriver({
@@ -116,7 +118,7 @@ test.group('GCS Driver | put', (group) => {
   })
 
   test('create file with custom metadata', async ({ assert }) => {
-    const key = 'hello.txt'
+    const key = `${string.random(10)}.txt`
     const contents = 'Hello world'
 
     const fdfs = new GCSDriver({
@@ -142,7 +144,7 @@ test.group('GCS Driver | put', (group) => {
   })
 
   test('create file with local visibility', async ({ assert }) => {
-    const key = 'hello.txt'
+    const key = `${string.random(10)}.txt`
     const contents = 'Hello world'
 
     const fdfs = new GCSDriver({
@@ -166,7 +168,7 @@ test.group('GCS Driver | put', (group) => {
   })
 
   test('create file with inline local visibility', async ({ assert }) => {
-    const key = 'hello.txt'
+    const key = `${string.random(10)}.txt`
     const contents = 'Hello world'
 
     const fdfs = new GCSDriver({
@@ -195,12 +197,13 @@ test.group('GCS Driver | putStream', (group) => {
   group.each.setup(() => {
     return async () => {
       await bucket.deleteFiles()
+      await noUniformedAclBucket.deleteFiles()
     }
   })
   group.each.timeout(10_000)
 
   test('create file from readable stream', async ({ fs, assert }) => {
-    const key = 'hello.txt'
+    const key = `${string.random(10)}.txt`
     const contents = 'Hello world'
 
     const fdfs = new GCSDriver({
@@ -221,7 +224,7 @@ test.group('GCS Driver | putStream', (group) => {
   })
 
   test('create files at a nested destination', async ({ fs, assert }) => {
-    const key = 'users/1/hello.txt'
+    const key = `users/1/${string.random(10)}.txt`
     const contents = 'Hello world'
 
     const fdfs = new GCSDriver({
@@ -242,7 +245,7 @@ test.group('GCS Driver | putStream', (group) => {
   })
 
   test('throw error when source stream returns an array', async ({ fs, assert }) => {
-    const key = 'users/1/hello.txt'
+    const key = `users/1/${string.random(10)}.txt`
 
     const fdfs = new GCSDriver({
       visibility: 'public',

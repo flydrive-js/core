@@ -8,6 +8,7 @@
  */
 
 import { test } from '@japa/runner'
+import string from '@poppinss/utils/string'
 import { Storage } from '@google-cloud/storage'
 import { GCS_BUCKET, GCS_KEY } from '../../helpers.js'
 import { GCSDriver } from '../../../drivers/gcs/driver.js'
@@ -29,7 +30,7 @@ test.group('GCS Driver | getMetaData', (group) => {
   group.each.timeout(10_000)
 
   test('get metaData of a file', async ({ assert }) => {
-    const key = 'hello.txt'
+    const key = `${string.random(6)}.txt`
     const contents = 'Hello world'
 
     const fdgcs = new GCSDriver({
@@ -52,7 +53,7 @@ test.group('GCS Driver | getMetaData', (group) => {
   })
 
   test('return error when file does not exists', async ({ assert }) => {
-    const key = 'hello.txt'
+    const key = `${string.random(6)}.txt`
 
     const fdgcs = new GCSDriver({
       visibility: 'public',

@@ -20,18 +20,22 @@ import { GCSDriver } from '../../../drivers/gcs/driver.js'
 const bucket = new Storage({
   credentials: GCS_KEY,
 }).bucket(GCS_BUCKET)
+const noUniformedAclBucket = new Storage({
+  credentials: GCS_KEY,
+}).bucket(GCS_FINE_GRAINED_ACL_BUCKET)
 
 test.group('GCS Driver | move', (group) => {
   group.each.setup(() => {
     return async () => {
       await bucket.deleteFiles()
+      await noUniformedAclBucket.deleteFiles()
     }
   })
   group.each.timeout(10_000)
 
   test('move file from source to the destination', async ({ assert }) => {
-    const source = 'hello.txt'
-    const destination = 'hi.txt'
+    const source = `${string.random(10)}.txt`
+    const destination = `${string.random(10)}.txt`
     const contents = 'Hello world'
 
     const fdgcs = new GCSDriver({
@@ -50,8 +54,8 @@ test.group('GCS Driver | move', (group) => {
   })
 
   test('move file from source to a nested directory', async ({ assert }) => {
-    const source = 'hello.txt'
-    const destination = 'foo/bar/baz/hi.txt'
+    const source = `${string.random(10)}.txt`
+    const destination = `foo/bar/baz/${string.random(10)}.txt`
     const contents = 'Hello world'
 
     const fdgcs = new GCSDriver({
@@ -70,8 +74,8 @@ test.group('GCS Driver | move', (group) => {
   })
 
   test('return error when source file does not exist', async ({ assert }) => {
-    const source = 'hello.txt'
-    const destination = 'hi.txt'
+    const source = `${string.random(10)}.txt`
+    const destination = `${string.random(10)}.txt`
 
     const fdgcs = new GCSDriver({
       visibility: 'public',
@@ -97,7 +101,6 @@ test.group('GCS Driver | move', (group) => {
     })
     await fdgcs.put(source, contents, {
       contentType: 'image/png',
-      cacheControl: 'no-cache',
       visibility: 'private',
     })
     await fdgcs.move(source, destination)
@@ -106,7 +109,7 @@ test.group('GCS Driver | move', (group) => {
     assert.equal(metaData.visibility, 'private')
     assert.equal(metaData.contentType, 'image/png')
 
-    const existsResponse = await bucket.file(source).exists()
+    const existsResponse = await noUniformedAclBucket.file(source).exists()
     assert.isFalse(existsResponse[0])
   })
 })

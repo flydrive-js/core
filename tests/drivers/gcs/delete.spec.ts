@@ -62,7 +62,7 @@ test.group('GCS Driver | delete', (group) => {
   })
 
   test('noop when trying to delete a non-existing file', async ({ assert }) => {
-    const key = 'foo/bar/hello.txt'
+    const key = `foo/bar/${string.random(6)}.txt`
     const fdgcs = new GCSDriver({
       visibility: 'public',
       bucket: GCS_BUCKET,
