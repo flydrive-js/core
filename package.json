@@ -15,7 +15,9 @@
     ".": "./build/index.js",
     "./types": "./build/src/types.js",
     "./fs": "./build/drivers/fs/main.js",
-    "./types/fs": "./build/drivers/fs/types.js"
+    "./types/fs": "./build/drivers/fs/types.js",
+    "./gcs": "./build/drivers/gcs/main.js",
+    "./types/gcs": "./build/drivers/gcs/types.js"
   },
   "scripts": {
     "clean": "del-cli build",

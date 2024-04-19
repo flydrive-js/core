@@ -24,7 +24,7 @@ export class GCSDriver implements DriverContract {
   #usingUniformAcl: boolean = true
 
   constructor(public options: GCSDriverOptions) {
-    this.#storage = new Storage(options)
+    this.#storage = 'storage' in options ? options.storage : new Storage(options)
     if (options.usingUniformAcl !== undefined) {
       this.#usingUniformAcl = options.usingUniformAcl
     }

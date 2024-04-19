@@ -7,10 +7,14 @@
  * file that was distributed with this source code.
  */
 
-import { StorageOptions } from '@google-cloud/storage'
-import { ObjectVisibility } from '../../src/types.js'
+import type { Storage, StorageOptions } from '@google-cloud/storage'
+import type { ObjectVisibility } from '../../src/types.js'
 
-export type GCSDriverOptions = StorageOptions & {
+/**
+ * The base set of options that are always needed to
+ * create GCS driver instance
+ */
+type GCSDriverBaseOptions = {
   /**
    * The bucket from which to read and write files
    */
@@ -31,3 +35,16 @@ export type GCSDriverOptions = StorageOptions & {
    */
   usingUniformAcl?: boolean
 }
+
+/**
+ * Configuration options accepted by the GCS driver
+ */
+export type GCSDriverOptions =
+  | ({
+      /**
+       * An instance of the GCS storage class. If not provided,
+       * one must provide other options to establish a connection
+       */
+      storage: Storage
+    } & GCSDriverBaseOptions)
+  | (StorageOptions & GCSDriverBaseOptions)

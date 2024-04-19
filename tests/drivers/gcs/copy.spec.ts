@@ -84,11 +84,15 @@ test.group('GCS Driver | copy', (group) => {
     const contents = 'Hello world'
 
     const fdgcs = new GCSDriver({
+      storage: new Storage({
+        credentials: GCS_KEY,
+      }),
       visibility: 'public',
       bucket: GCS_FINE_GRAINED_ACL_BUCKET,
       credentials: GCS_KEY,
       usingUniformAcl: false,
     })
+
     await fdgcs.put(source, contents, {
       contentType: 'image/png',
       cacheControl: 'no-cache',
