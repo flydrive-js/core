@@ -1,0 +1,104 @@
+/*
+ * @flydrive/core
+ *
+ * (c) FlyDrive
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+import { test } from '@japa/runner'
+import string from '@poppinss/utils/string'
+import { Storage } from '@google-cloud/storage'
+import { GCSDriver } from '../../../drivers/gcs/driver.js'
+import { GCS_BUCKET, GCS_FINE_GRAINED_ACL_BUCKET, GCS_KEY } from '../../helpers.js'
+
+/**
+ * Direct access to Google cloud storage bucket
+ * via their SDK
+ */
+const bucket = new Storage({
+  credentials: GCS_KEY,
+}).bucket(GCS_BUCKET)
+
+test.group('GCS Driver | copy', (group) => {
+  group.each.setup(() => {
+    return async () => {
+      await bucket.deleteFiles()
+    }
+  })
+  group.each.timeout(10_000)
+
+  test('copy file from source to the destination', async ({ assert }) => {
+    const source = 'hello.txt'
+    const destination = 'hi.txt'
+    const contents = 'Hello world'
+
+    const fdgcs = new GCSDriver({
+      visibility: 'public',
+      bucket: GCS_BUCKET,
+      credentials: GCS_KEY,
+      usingUniformAcl: true,
+    })
+    await fdgcs.put(source, contents)
+    await fdgcs.copy(source, destination)
+
+    assert.equal(await fdgcs.get(destination), contents)
+  })
+
+  test('copy file from source to a nested directory', async ({ assert }) => {
+    const source = 'hello.txt'
+    const destination = 'foo/bar/baz/hi.txt'
+    const contents = 'Hello world'
+
+    const fdgcs = new GCSDriver({
+      visibility: 'public',
+      bucket: GCS_BUCKET,
+      credentials: GCS_KEY,
+      usingUniformAcl: true,
+    })
+    await fdgcs.put(source, contents)
+    await fdgcs.copy(source, destination)
+
+    assert.equal(await fdgcs.get(destination), contents)
+  })
+
+  test('return error when source file does not exist', async ({ assert }) => {
+    const source = 'hello.txt'
+    const destination = 'hi.txt'
+
+    const fdgcs = new GCSDriver({
+      visibility: 'public',
+      bucket: GCS_BUCKET,
+      credentials: GCS_KEY,
+      usingUniformAcl: true,
+    })
+    await assert.rejects(async () => {
+      await fdgcs.copy(source, destination)
+    }, /No such object:/)
+  })
+
+  test('retain source file visibility and metadata during copy', async ({ assert }) => {
+    const source = `${string.random(10)}.txt`
+    const destination = `${string.random(10)}.txt`
+    const contents = 'Hello world'
+
+    const fdgcs = new GCSDriver({
+      visibility: 'public',
+      bucket: GCS_FINE_GRAINED_ACL_BUCKET,
+      credentials: GCS_KEY,
+      usingUniformAcl: false,
+    })
+    await fdgcs.put(source, contents, {
+      contentType: 'image/png',
+      cacheControl: 'no-cache',
+      visibility: 'private',
+    })
+
+    await fdgcs.copy(source, destination)
+    const metaData = await fdgcs.getMetaData(destination)
+
+    assert.equal(metaData.visibility, 'private')
+    assert.equal(metaData.contentType, 'image/png')
+  })
+})

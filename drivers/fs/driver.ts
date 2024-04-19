@@ -77,14 +77,7 @@ export class FSDriver implements DriverContract {
    * - Missing directories will be created recursively.
    * - Existing file will be overwritten.
    */
-  put(
-    key: string,
-    contents: string | ArrayBuffer | Uint8Array,
-    options?: WriteOptions
-  ): Promise<void> {
-    if (contents instanceof ArrayBuffer) {
-      return this.#write(key, new Uint8Array(contents), { signal: options?.signal })
-    }
+  put(key: string, contents: string | Uint8Array, options?: WriteOptions): Promise<void> {
     return this.#write(key, contents, { signal: options?.signal })
   }
 
@@ -107,7 +100,7 @@ export class FSDriver implements DriverContract {
    * exception is thrown when the file is missing.
    */
   async get(key: string): Promise<string> {
-    return this.#read(key).then((value) => value.toString())
+    return this.#read(key).then((value) => value.toString('utf-8'))
   }
 
   /**
@@ -120,7 +113,7 @@ export class FSDriver implements DriverContract {
   }
 
   /**
-   * Returns the contents of the file as a UTF-8 string. An
+   * Returns the contents of the file as an Uint8Array. An
    * exception is thrown when the file is missing.
    */
   async getArrayBuffer(key: string): Promise<ArrayBuffer> {

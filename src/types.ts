@@ -37,7 +37,6 @@ export type WriteOptions = {
   contentDisposition?: string
   cacheControl?: string
   contentLength?: number
-  signal?: AbortSignal
 } & {
   [key: string]: any
 }
@@ -50,11 +49,7 @@ export interface DriverContract {
    * Write object to the destination with the provided
    * contents.
    */
-  put(
-    key: string,
-    contents: string | ArrayBuffer | Uint8Array,
-    options?: WriteOptions
-  ): Promise<void>
+  put(key: string, contents: string | Uint8Array, options?: WriteOptions): Promise<void>
 
   /**
    * Write object to the destination with the provided
@@ -93,14 +88,14 @@ export interface DriverContract {
    * the "source" and "destination" will be the key names
    * and not absolute paths.
    */
-  copy(source: string, destination: string): Promise<void>
+  copy(source: string, destination: string, options?: WriteOptions): Promise<void>
 
   /**
    * Move the file from within the disk root location. Both
    * the "source" and "destination" will be the key names
    * and not absolute paths.
    */
-  move(source: string, destination: string): Promise<void>
+  move(source: string, destination: string, options?: WriteOptions): Promise<void>
 
   /**
    * Delete the file for the given key. Should not throw
