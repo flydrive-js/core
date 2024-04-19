@@ -24,11 +24,7 @@ export class Disk {
     this.#normalizer = normalizer || new KeyNormalizer()
   }
 
-  async put(
-    key: string,
-    contents: string | ArrayBuffer | Uint8Array,
-    options?: WriteOptions
-  ): Promise<void> {
+  async put(key: string, contents: string | Uint8Array, options?: WriteOptions): Promise<void> {
     key = this.#normalizer.normalize(key)
     try {
       return await this.driver.put(key, contents, options)
