@@ -23,10 +23,10 @@ jobs:
       - name: Run typecheck
         run: npm run typecheck
 
-  tests:
+  tests-fs:
     runs-on: ${{ matrix.os }}
     concurrency:
-      group: test
+      group: fs
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
@@ -42,22 +42,22 @@ jobs:
       - name: Install
         run: npm install
       - name: Run tests
-        run: npm test
+        run: npm test main
         env:
           GCS_KEY: ${{ secrets.GCS_KEY }}
           GCS_BUCKET: drive-gcs
           GCS_FINE_GRAINED_ACL_BUCKET: drive-gcs-no-uniform-acl
-  windows:
-    runs-on: windows-latest
+  tests-gcs:
+    runs-on: ${{ matrix.os }}
     concurrency:
-      group: test
+      group: gcs
     strategy:
       matrix:
+        os: [ubuntu-latest]
         node-version:
-          - 20.10.0
           - 21.x
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v1
         with:
@@ -65,7 +65,7 @@ jobs:
       - name: Install
         run: npm install
       - name: Run tests
-        run: npm test
+        run: npm test gcs
         env:
           GCS_KEY: ${{ secrets.GCS_KEY }}
           GCS_BUCKET: drive-gcs

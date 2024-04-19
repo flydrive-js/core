@@ -8,7 +8,7 @@
  */
 
 import { test } from '@japa/runner'
-import { KeyNormalizer } from '../src/key_normalizer.js'
+import { KeyNormalizer } from '../../src/key_normalizer.js'
 
 test.group('Key normalizer | Pre normalization', () => {
   test('perform pre-normalization on key "{key}"')
