@@ -96,7 +96,12 @@ export class GCSDriver implements DriverContract {
     options?: WriteOptions | undefined
   ): Promise<void> {
     const bucket = this.#storage.bucket(this.options.bucket)
-    await pipeline(contents, bucket.file(key).createWriteStream(this.#getSaveOptions(options)))
+    return new Promise((resolve, reject) => {
+      contents.once('error', (error) => reject(error))
+      return pipeline(contents, bucket.file(key).createWriteStream(this.#getSaveOptions(options)))
+        .then(resolve)
+        .catch(reject)
+    })
   }
 
   /**
