@@ -199,4 +199,13 @@ export class GCSDriver implements DriverContract {
     const bucket = this.#storage.bucket(this.options.bucket)
     await bucket.file(key).delete({ ignoreNotFound: true })
   }
+
+  /**
+   * Deletes the files and directories matching the provided
+   * prefix.
+   */
+  async deleteAll(prefix: string): Promise<void> {
+    const bucket = this.#storage.bucket(this.options.bucket)
+    await bucket.deleteFiles({ prefix: `${prefix.replace(/\/$/, '')}/` })
+  }
 }

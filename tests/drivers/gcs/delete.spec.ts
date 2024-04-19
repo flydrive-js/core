@@ -95,3 +95,69 @@ test.group('GCS Driver | delete', (group) => {
     assert.isTrue(existsResponse[0])
   })
 })
+
+test.group('GCS Driver | deleteAll', (group) => {
+  group.each.setup(() => {
+    return async () => {
+      await bucket.deleteFiles()
+    }
+  })
+  group.each.timeout(10_000)
+
+  test('delete all files matching the prefix', async ({ assert }) => {
+    const key = `foo/${string.random(6)}.txt`
+    const anotherKey = `${string.random(6)}.txt`
+    const contents = 'Hello world'
+
+    const fdgcs = new GCSDriver({
+      visibility: 'public',
+      bucket: GCS_BUCKET,
+      credentials: GCS_KEY,
+    })
+
+    await fdgcs.put(key, contents)
+    await fdgcs.put(anotherKey, contents)
+
+    await fdgcs.deleteAll('foo')
+    assert.deepEqual(await bucket.file(key).exists(), [false])
+    assert.deepEqual(await bucket.file(anotherKey).exists(), [true])
+  })
+
+  test('delete empty folders', async ({ assert }) => {
+    const key = `foo/${string.random(6)}.txt`
+    const anotherKey = `foo/bar/${string.random(6)}.txt}`
+    const contents = 'Hello world'
+
+    const fdgcs = new GCSDriver({
+      visibility: 'public',
+      bucket: GCS_BUCKET,
+      credentials: GCS_KEY,
+    })
+    await fdgcs.put(key, contents)
+    await fdgcs.put(anotherKey, contents)
+    await fdgcs.delete(anotherKey)
+
+    /**
+     * Since we have deleted the "foo/bar/hello.txt" file. The
+     * "bar" directory will return an empty array of files
+     */
+    const files = await bucket.getFiles({ prefix: 'foo/bar/' })
+    assert.lengthOf(files[0], 0)
+
+    /**
+     * Now we have deletes all the files within the bucket.
+     */
+    await fdgcs.deleteAll('foo')
+    const allFiles = await bucket.getFiles()
+    assert.lengthOf(allFiles[0], 0)
+  })
+
+  test('noop when trying to delete non-existing prefixes', async () => {
+    const fdgcs = new GCSDriver({
+      visibility: 'public',
+      bucket: GCS_BUCKET,
+      credentials: GCS_KEY,
+    })
+    await fdgcs.deleteAll('foo')
+  })
+})
