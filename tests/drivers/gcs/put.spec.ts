@@ -244,7 +244,7 @@ test.group('GCS Driver | putStream', (group) => {
     assert.equal(response[0].toString(), contents)
   })
 
-  test('throw error when source stream returns an array', async ({ fs, assert }) => {
+  test('throw error when source stream returns an error', async ({ fs, assert }) => {
     const key = `users/1/${string.random(10)}.txt`
 
     const fdfs = new GCSDriver({
@@ -256,6 +256,6 @@ test.group('GCS Driver | putStream', (group) => {
 
     await assert.rejects(async () => {
       await fdfs.putStream(key, createReadStream(join(fs.basePath, key)))
-    }, /ENOENT: no such file or directory/)
+    }, /No such object/)
   })
 })
