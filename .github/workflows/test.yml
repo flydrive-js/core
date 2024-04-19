@@ -7,7 +7,6 @@ on:
 jobs:
   lint:
     runs-on: ubuntu-latest
-    environment: Development
     steps:
       - uses: actions/checkout@v4
       - name: Install
@@ -17,7 +16,6 @@ jobs:
 
   typecheck:
     runs-on: ubuntu-latest
-    environment: Development
     steps:
       - uses: actions/checkout@v4
       - name: Install
@@ -27,7 +25,6 @@ jobs:
 
   tests:
     runs-on: ${{ matrix.os }}
-    environment: Development
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
@@ -44,9 +41,12 @@ jobs:
         run: npm install
       - name: Run tests
         run: npm test
+        env:
+          GCS_KEY: ${{ secrets.GCS_KEY }}
+          GCS_BUCKET: drive-gcs
+          GCS_FINE_GRAINED_ACL_BUCKET: drive-gcs-no-uniform-acl
   windows:
     runs-on: windows-latest
-    environment: Development
     strategy:
       matrix:
         node-version:
@@ -62,3 +62,7 @@ jobs:
         run: npm install
       - name: Run tests
         run: npm test
+        env:
+          GCS_KEY: ${{ secrets.GCS_KEY }}
+          GCS_BUCKET: drive-gcs
+          GCS_FINE_GRAINED_ACL_BUCKET: drive-gcs-no-uniform-acl
