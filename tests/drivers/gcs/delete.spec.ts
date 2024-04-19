@@ -24,7 +24,7 @@ const bucket = new Storage({
 test.group('GCS Driver | delete', (group) => {
   group.each.setup(() => {
     return async () => {
-      // await bucket.deleteFiles()
+      await bucket.deleteFiles()
     }
   })
   group.each.timeout(10_000)

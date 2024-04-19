@@ -41,7 +41,6 @@ test.group('GCS Driver | getMetaData', (group) => {
 
     await fdgcs.put(key, contents)
     const metaData = await fdgcs.getMetaData(key)
-    console.log(metaData)
 
     assert.exists(metaData.etag)
     assert.isTrue(metaData.lastModified instanceof Date)
