@@ -18,6 +18,7 @@ import { Retrier } from '@humanwhocodes/retry'
 
 import type { FSDriverOptions } from './types.js'
 import type { DriverContract, ObjectMetaData, WriteOptions } from '../../src/types.js'
+import { RuntimeException } from '@poppinss/utils'
 
 /**
  * The error codes on which we want to retry fs
@@ -127,6 +128,10 @@ export class FSDriver implements DriverContract {
     const location = join(this.#rootUrl, key)
     const stats = await fsp.stat(location)
 
+    if (stats.isDirectory()) {
+      throw new RuntimeException(`Cannot get metadata of a directory "${key}"`)
+    }
+
     return {
       contentLength: stats.size,
       contentType: mimeTypes.lookup(key) || undefined,
@@ -158,7 +163,8 @@ export class FSDriver implements DriverContract {
     const destinationLocation = join(this.#rootUrl, destination)
     return this.#retrier.retry(async () => {
       await fsp.mkdir(dirname(destinationLocation), { recursive: true })
-      await fsp.rename(sourceLocation, destinationLocation)
+      await fsp.copyFile(sourceLocation, destinationLocation)
+      await fsp.unlink(sourceLocation)
     })
   }
 

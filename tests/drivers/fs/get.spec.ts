@@ -30,6 +30,15 @@ test.group('FS Driver | get', () => {
       await fdfs.get(key)
     }, /ENOENT: no such file or directory/)
   })
+
+  test('return error when trying to read contents of a folder', async ({ fs, assert }) => {
+    const key = 'foo/hello.txt'
+    const fdfs = new FSDriver({ location: fs.baseUrl, visibility: 'public' })
+    await fdfs.put(key, 'hello world')
+    await assert.rejects(async () => {
+      await fdfs.get('foo')
+    }, /EPERM: operation not permitted|EISDIR: illegal operation on a direct/)
+  })
 })
 
 test.group('FS Driver | getStream', () => {

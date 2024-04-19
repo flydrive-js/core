@@ -36,4 +36,15 @@ test.group('FS Driver | getMetaData', () => {
       await fdfs.getMetaData(key)
     }, /ENOENT: no such file or directory/)
   })
+
+  test('return error when trying to get metadata of a directory', async ({ fs, assert }) => {
+    const key = 'foo/hello.txt'
+
+    const fdfs = new FSDriver({ location: fs.baseUrl, visibility: 'public' })
+    await fdfs.put(key, 'hello world')
+
+    await assert.rejects(async () => {
+      await fdfs.getMetaData('foo')
+    }, /Cannot get metadata of a directory/)
+  })
 })

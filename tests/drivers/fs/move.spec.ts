@@ -62,4 +62,16 @@ test.group('FS Driver | move', () => {
       await fdfs.move(source, destination)
     }, /ENOENT: no such file or directory/)
   })
+
+  test('return error when source is a directory', async ({ fs, assert }) => {
+    const source = 'foo/hello.txt'
+    const destination = 'bar'
+
+    const fdfs = new FSDriver({ location: fs.baseUrl, visibility: 'public' })
+    await fdfs.put(source, 'hello world')
+
+    await assert.rejects(async () => {
+      await fdfs.move('foo', destination)
+    }, /ENOTSUP: operation not supported/)
+  })
 })
