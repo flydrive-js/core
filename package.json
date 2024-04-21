@@ -1,6 +1,6 @@
 {
-  "name": "@flydrive/drive",
-  "description": "",
+  "name": "flydrive",
+  "description": "File storage library with unified API to manage files across multiple cloud storage providers like S3, GCS, R2 and so on",
   "version": "0.0.0",
   "engines": {
     "node": ">=20.6.0"
@@ -14,10 +14,10 @@
   "exports": {
     ".": "./build/index.js",
     "./types": "./build/src/types.js",
-    "./fs": "./build/drivers/fs/main.js",
-    "./types/fs": "./build/drivers/fs/types.js",
-    "./gcs": "./build/drivers/gcs/main.js",
-    "./types/gcs": "./build/drivers/gcs/types.js"
+    "./drivers/fs": "./build/drivers/fs/main.js",
+    "./drivers/fs/types": "./build/drivers/fs/types.js",
+    "./drivers/gcs": "./build/drivers/gcs/main.js",
+    "./drivers/gcs/types": "./build/drivers/gcs/types.js"
   },
   "scripts": {
     "clean": "del-cli build",

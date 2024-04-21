@@ -9,8 +9,8 @@
 
 import type { Readable } from 'node:stream'
 import * as errors from './errors.js'
-import type { DriverContract, ObjectMetaData, WriteOptions } from './types.js'
 import { KeyNormalizer } from './key_normalizer.js'
+import type { DriverContract, ObjectMetaData, WriteOptions } from './types.js'
 
 /**
  * Disk offers a unified API for working with different drivers
