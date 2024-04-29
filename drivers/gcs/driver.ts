@@ -9,11 +9,18 @@
 
 import type { Readable } from 'node:stream'
 import { pipeline } from 'node:stream/promises'
-import { SaveOptions, Storage } from '@google-cloud/storage'
+import { GetFilesOptions, SaveOptions, Storage, FileMetadata } from '@google-cloud/storage'
 
 import debug from './debug.js'
 import type { GCSDriverOptions } from './types.js'
-import type { DriverContract, ObjectMetaData, WriteOptions } from '../../src/types.js'
+import { DriveFile } from '../../src/driver_file.js'
+import type {
+  DriverContract,
+  ObjectMetaData,
+  ObjectVisibility,
+  WriteOptions,
+} from '../../src/types.js'
+import { DriveDirectory } from '../../src/drive_directory.js'
 
 /**
  * Implementation of FlyDrive driver that reads and persists files
@@ -76,31 +83,52 @@ export class GCSDriver implements DriverContract {
   }
 
   /**
-   * Writes a file to the bucket for the given key and contents.
+   * Creates the metadata for the file from the raw response
+   * returned by GCS
    */
-  async put(
-    key: string,
-    contents: string | Uint8Array,
-    options?: WriteOptions | undefined
-  ): Promise<void> {
-    const bucket = this.#storage.bucket(this.options.bucket)
-    await bucket.file(key).save(Buffer.from(contents), this.#getSaveOptions(options))
+  #createFileMetaData(apiFile: FileMetadata) {
+    const metaData: ObjectMetaData = {
+      contentType: apiFile.contentType,
+      contentLength: Number(apiFile.size!),
+      etag: apiFile.etag!,
+      lastModified: new Date(apiFile.updated!),
+    }
+
+    return metaData
   }
 
   /**
-   * Writes a file to the bucket for the given key and stream
+   * Returns the GCS objects using the callback approach, since there
+   * is no other way to get access to the API response and the
+   * pagination token
+   *
+   * Instead of using "bucket.getFiles" we use "bucket.request", because
+   * the "getFiles" method internally creates an instance of "File".
+   * We do not even need this instance and wasting resources when
+   * querying a bucket with many files.
    */
-  async putStream(
-    key: string,
-    contents: Readable,
-    options?: WriteOptions | undefined
-  ): Promise<void> {
+  #getGCSObjects(
+    options: GetFilesOptions
+  ): Promise<{ files: FileMetadata[]; prefixes: string[]; paginationToken?: string }> {
     const bucket = this.#storage.bucket(this.options.bucket)
     return new Promise((resolve, reject) => {
-      contents.once('error', (error) => reject(error))
-      return pipeline(contents, bucket.file(key).createWriteStream(this.#getSaveOptions(options)))
-        .then(resolve)
-        .catch(reject)
+      bucket.request(
+        {
+          uri: '/o',
+          qs: options,
+        },
+        (error, response) => {
+          if (error) {
+            reject(error)
+          } else {
+            resolve({
+              files: response.items || [],
+              paginationToken: response.nextPageToken,
+              prefixes: response.prefixes || [],
+            })
+          }
+        }
+      )
     })
   }
 
@@ -139,15 +167,55 @@ export class GCSDriver implements DriverContract {
   async getMetaData(key: string): Promise<ObjectMetaData> {
     const bucket = this.#storage.bucket(this.options.bucket)
     const response = await bucket.file(key).getMetadata()
-    const [isFilePublic] = await bucket.file(key).isPublic()
 
-    return {
-      contentLength: Number(response[0].size!),
-      etag: response[0].etag!,
-      lastModified: new Date(response[0].updated!),
-      visibility: isFilePublic ? 'public' : 'private',
-      contentType: response[0].contentType!,
-    }
+    return this.#createFileMetaData(response[0])
+  }
+
+  /**
+   * Returns the visibility of a file
+   */
+  async getVisibility(key: string): Promise<ObjectVisibility> {
+    const bucket = this.#storage.bucket(this.options.bucket)
+    const [isFilePublic] = await bucket.file(key).isPublic()
+    return isFilePublic ? 'public' : 'private'
+  }
+
+  /**
+   * Updates the visibility of a file
+   */
+  async setVisibility(key: string, visibility: ObjectVisibility): Promise<void> {
+    const bucket = this.#storage.bucket(this.options.bucket)
+    const file = bucket.file(key)
+    visibility === 'private' ? await file.makePrivate() : await file.makePublic()
+  }
+
+  /**
+   * Writes a file to the bucket for the given key and contents.
+   */
+  async put(
+    key: string,
+    contents: string | Uint8Array,
+    options?: WriteOptions | undefined
+  ): Promise<void> {
+    const bucket = this.#storage.bucket(this.options.bucket)
+    await bucket.file(key).save(Buffer.from(contents), this.#getSaveOptions(options))
+  }
+
+  /**
+   * Writes a file to the bucket for the given key and stream
+   */
+  async putStream(
+    key: string,
+    contents: Readable,
+    options?: WriteOptions | undefined
+  ): Promise<void> {
+    const bucket = this.#storage.bucket(this.options.bucket)
+    return new Promise((resolve, reject) => {
+      contents.once('error', (error) => reject(error))
+      return pipeline(contents, bucket.file(key).createWriteStream(this.#getSaveOptions(options)))
+        .then(resolve)
+        .catch(reject)
+    })
   }
 
   /**
@@ -207,5 +275,59 @@ export class GCSDriver implements DriverContract {
   async deleteAll(prefix: string): Promise<void> {
     const bucket = this.#storage.bucket(this.options.bucket)
     await bucket.deleteFiles({ prefix: `${prefix.replace(/\/$/, '')}/` })
+  }
+
+  /**
+   * Returns a list of files. The pagination token can be used to paginate
+   * through the files.
+   */
+  async listAll(
+    prefix: string,
+    options?: {
+      recursive?: boolean
+      paginationToken?: string
+      maxResults?: number
+    }
+  ): Promise<{
+    paginationToken?: string
+    objects: Iterable<DriveFile | DriveDirectory>
+  }> {
+    const self = this
+    let { recursive, paginationToken, maxResults } = Object.assign({ recursive: false }, options)
+    if (prefix) {
+      prefix = !recursive ? `${prefix.replace(/\/$/, '')}/` : prefix
+    }
+
+    const response = await this.#getGCSObjects({
+      autoPaginate: false,
+      delimiter: !recursive ? '/' : '',
+      includeTrailingDelimiter: !recursive,
+      includeFoldersAsPrefixes: !recursive,
+      pageToken: paginationToken,
+      ...(prefix !== '/' ? { prefix } : {}),
+      ...(maxResults ? { maxResults } : {}),
+    })
+
+    /**
+     * The generator is used to lazily iterate over files and
+     * convert them into DriveFile or DriveDirectory instances
+     */
+    function* filesGenerator(): Iterator<
+      DriveFile | { isFile: false; isDirectory: true; prefix: string; name: string }
+    > {
+      for (const directory of response.prefixes) {
+        yield new DriveDirectory(directory.replace(/\/$/, ''))
+      }
+      for (const file of response.files) {
+        yield new DriveFile(file.name!, self, self.#createFileMetaData(file))
+      }
+    }
+
+    return {
+      paginationToken: undefined,
+      objects: {
+        [Symbol.iterator]: filesGenerator,
+      },
+    }
   }
 }

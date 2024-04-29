@@ -12,13 +12,20 @@ import mimeTypes from 'mime-types'
 import { Readable } from 'node:stream'
 import * as fsp from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
-import { dirname, join } from 'node:path'
 import { createReadStream } from 'node:fs'
 import { Retrier } from '@humanwhocodes/retry'
+import { RuntimeException } from '@poppinss/utils'
+import { dirname, join, relative } from 'node:path'
 
 import type { FSDriverOptions } from './types.js'
-import type { DriverContract, ObjectMetaData, WriteOptions } from '../../src/types.js'
-import { RuntimeException } from '@poppinss/utils'
+import { DriveFile } from '../../src/driver_file.js'
+import { DriveDirectory } from '../../src/drive_directory.js'
+import type {
+  WriteOptions,
+  ObjectMetaData,
+  DriverContract,
+  ObjectVisibility,
+} from '../../src/types.js'
 
 /**
  * The error codes on which we want to retry fs
@@ -73,30 +80,6 @@ export class FSDriver implements DriverContract {
   }
 
   /**
-   * Writes a file to the destination with the provided contents.
-   *
-   * - Missing directories will be created recursively.
-   * - Existing file will be overwritten.
-   */
-  put(key: string, contents: string | Uint8Array, options?: WriteOptions): Promise<void> {
-    return this.#write(key, contents, { signal: options?.signal })
-  }
-
-  /**
-   * Writes a file to the destination with the provided contents
-   * as a readable stream.
-   *
-   * - Missing directories will be created recursively.
-   * - Existing file will be overwritten.
-   */
-  putStream(key: string, contents: Readable, options?: WriteOptions): Promise<void> {
-    return new Promise((resolve, reject) => {
-      contents.once('error', (error) => reject(error))
-      return this.#write(key, contents, { signal: options?.signal }).then(resolve).catch(reject)
-    })
-  }
-
-  /**
    * Returns the contents of the file as a UTF-8 string. An
    * exception is thrown when the file is missing.
    */
@@ -137,8 +120,45 @@ export class FSDriver implements DriverContract {
       contentType: mimeTypes.lookup(key) || undefined,
       etag: etag(stats),
       lastModified: stats.mtime,
-      visibility: this.options.visibility,
     }
+  }
+
+  /**
+   * Returns the file visibility from the pre-defined config
+   * value
+   */
+  async getVisibility(_: string): Promise<ObjectVisibility> {
+    return this.options.visibility
+  }
+
+  /**
+   * Results in noop, since the local filesystem cannot have per
+   * object visibility.
+   */
+  async setVisibility(_: string, __: ObjectVisibility): Promise<void> {}
+
+  /**
+   * Writes a file to the destination with the provided contents.
+   *
+   * - Missing directories will be created recursively.
+   * - Existing file will be overwritten.
+   */
+  put(key: string, contents: string | Uint8Array, options?: WriteOptions): Promise<void> {
+    return this.#write(key, contents, { signal: options?.signal })
+  }
+
+  /**
+   * Writes a file to the destination with the provided contents
+   * as a readable stream.
+   *
+   * - Missing directories will be created recursively.
+   * - Existing file will be overwritten.
+   */
+  putStream(key: string, contents: Readable, options?: WriteOptions): Promise<void> {
+    return new Promise((resolve, reject) => {
+      contents.once('error', (error) => reject(error))
+      return this.#write(key, contents, { signal: options?.signal }).then(resolve).catch(reject)
+    })
   }
 
   /**
@@ -196,5 +216,57 @@ export class FSDriver implements DriverContract {
     return this.#retrier.retry(async () => {
       return fsp.rm(location, { recursive: true, force: true })
     })
+  }
+
+  /**
+   * Returns a list of files. The pagination properties are ignored
+   * by the fs driver, since it does not support pagination.
+   */
+  async listAll(
+    prefix: string,
+    options?: {
+      recursive?: boolean
+      paginationToken?: string
+    }
+  ): Promise<{
+    paginationToken?: string
+    objects: Iterable<DriveFile | DriveDirectory>
+  }> {
+    const self = this
+    const location = join(this.#rootUrl, prefix)
+    const { recursive } = Object.assign({ recursive: false }, options)
+
+    /**
+     * Reading files with their types.
+     */
+    const files = await fsp.readdir(location, {
+      recursive,
+      withFileTypes: true,
+    })
+
+    /**
+     * The generator is used to lazily iterate over files and
+     * convert them into DriveFile or DriveDirectory instances
+     */
+    function* filesGenerator(): Iterator<
+      DriveFile | { isFile: false; isDirectory: true; prefix: string; name: string }
+    > {
+      for (const file of files) {
+        // @ts-expect-error "Dirent.parentPath" is the new property, but missing on types
+        const relativeName = relative(self.#rootUrl, join(file.parentPath, file.name))
+        if (file.isFile()) {
+          yield new DriveFile(relativeName, self)
+        } else if (!recursive) {
+          yield new DriveDirectory(relativeName)
+        }
+      }
+    }
+
+    return {
+      paginationToken: undefined,
+      objects: {
+        [Symbol.iterator]: filesGenerator,
+      },
+    }
   }
 }

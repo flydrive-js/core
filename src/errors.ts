@@ -33,13 +33,13 @@ export const E_CANNOT_DELETE_FILE = createError<[key: string]>(
   'E_CANNOT_DELETE_FILE'
 )
 
-// /**
-//  * Unable to delete directory
-//  */
-// export const E_CANNOT_DELETE_DIRECTORY = createError<[key: string]>(
-//   'Cannot delete directory at location "%s"',
-//   'E_CANNOT_DELETE_FILE'
-// )
+/**
+ * Unable to delete directory
+ */
+export const E_CANNOT_DELETE_DIRECTORY = createError<[key: string]>(
+  'Cannot delete directory at location "%s"',
+  'E_CANNOT_DELETE_DIRECTORY'
+)
 
 /**
  * Unable to copy file
@@ -73,13 +73,13 @@ export const E_CANNOT_GET_METADATA = createError<[key: string]>(
   'E_CANNOT_GET_METADATA'
 )
 
-// /**
-//  * Unable to set file visibility
-//  */
-// export const E_CANNOT_SET_VISIBILITY = createError<[action: string, key: string]>(
-//   'Unable to set visibility for file at location "%s"',
-//   'E_CANNOT_SET_VISIBILITY'
-// )
+/**
+ * Unable to set file visibility
+ */
+export const E_CANNOT_SET_VISIBILITY = createError<[key: string]>(
+  'Unable to set visibility for file at location "%s"',
+  'E_CANNOT_SET_VISIBILITY'
+)
 
 // /**
 //  * Unable to generate URL for a file

@@ -8,6 +8,8 @@
  */
 
 import { Readable } from 'node:stream'
+import { DriveFile } from './driver_file.js'
+import { DriveDirectory } from './drive_directory.js'
 
 /**
  * The visibility of the object.
@@ -19,7 +21,6 @@ export type ObjectVisibility = 'public' | 'private'
  * using the "getMetaData" method.
  */
 export type ObjectMetaData = {
-  visibility: ObjectVisibility
   contentType?: string
   contentLength: number
   etag: string
@@ -45,18 +46,6 @@ export type WriteOptions = {
  * The interface every driver must implement.
  */
 export interface DriverContract {
-  /**
-   * Write object to the destination with the provided
-   * contents.
-   */
-  put(key: string, contents: string | Uint8Array, options?: WriteOptions): Promise<void>
-
-  /**
-   * Write object to the destination with the provided
-   * contents as a readable stream
-   */
-  putStream(key: string, contents: Readable, options?: WriteOptions): Promise<void>
-
   /**
    * Return contents of a object for the given key as a UTF-8 string.
    * Should throw "E_CANNOT_READ_FILE" error when the file
@@ -84,6 +73,28 @@ export interface DriverContract {
   getMetaData(key: string): Promise<ObjectMetaData>
 
   /**
+   * Return the visibility of the file
+   */
+  getVisibility(key: string): Promise<ObjectVisibility>
+
+  /**
+   * Update the visibility of the file
+   */
+  setVisibility(key: string, visibility: ObjectVisibility): Promise<void>
+
+  /**
+   * Write object to the destination with the provided
+   * contents.
+   */
+  put(key: string, contents: string | Uint8Array, options?: WriteOptions): Promise<void>
+
+  /**
+   * Write object to the destination with the provided
+   * contents as a readable stream
+   */
+  putStream(key: string, contents: Readable, options?: WriteOptions): Promise<void>
+
+  /**
    * Copy the file from within the disk root location. Both
    * the "source" and "destination" will be the key names
    * and not absolute paths.
@@ -107,4 +118,19 @@ export interface DriverContract {
    * Delete the files and directories matching the provided prefix.
    */
   deleteAll(prefix: string): Promise<void>
+
+  /**
+   * The list all method must return an array of objects with
+   * the ability to paginate results (if supported).
+   */
+  listAll(
+    prefix: string,
+    options?: {
+      recursive?: boolean
+      paginationToken?: string
+    }
+  ): Promise<{
+    paginationToken?: string
+    objects: Iterable<DriveFile | DriveDirectory>
+  }>
 }

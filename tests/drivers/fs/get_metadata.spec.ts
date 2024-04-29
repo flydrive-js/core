@@ -24,7 +24,6 @@ test.group('FS Driver | getMetaData', () => {
     assert.containsSubset(metaData, {
       contentLength: 11,
       contentType: 'text/plain',
-      visibility: 'public',
     })
   })
 
