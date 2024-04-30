@@ -132,6 +132,16 @@ export class GCSDriver implements DriverContract {
   }
 
   /**
+   * Returns a boolean indicating if the file exists
+   * or not.
+   */
+  async exist(key: string): Promise<boolean> {
+    const bucket = this.#storage.bucket(this.options.bucket)
+    const response = await bucket.file(key).exists()
+    return response[0]
+  }
+
+  /**
    * Returns the contents of a file as a UTF-8 string. An
    * exception is thrown when object is missing.
    */

@@ -47,6 +47,11 @@ export type WriteOptions = {
  */
 export interface DriverContract {
   /**
+   * Return a boolean indicating if the file exists
+   */
+  exist(key: string): Promise<boolean>
+
+  /**
    * Return contents of a object for the given key as a UTF-8 string.
    * Should throw "E_CANNOT_READ_FILE" error when the file
    * does not exists.

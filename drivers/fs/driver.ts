@@ -81,6 +81,22 @@ export class FSDriver implements DriverContract {
   }
 
   /**
+   * Returns a boolean indicating if the file exists or not.
+   */
+  async exist(key: string): Promise<boolean> {
+    const location = join(this.#rootUrl, key)
+    try {
+      const object = await fsp.stat(location)
+      return object.isFile()
+    } catch (error) {
+      if (error.code === 'ENOENT') {
+        return false
+      }
+      throw error
+    }
+  }
+
+  /**
    * Returns the contents of the file as a UTF-8 string. An
    * exception is thrown when the file is missing.
    */
