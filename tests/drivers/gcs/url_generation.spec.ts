@@ -129,4 +129,30 @@ test.group('GCS Driver | getSignedUrl', (group) => {
 
     assert.equal(fileURL.searchParams.get('response-content-disposition'), 'attachment')
   })
+
+  test('use custom implementation for generating signed URL', async ({ assert }) => {
+    const key = `${string.random(6)}.txt`
+
+    const fdgcs = new GCSDriver({
+      visibility: 'public',
+      bucket: GCS_BUCKET,
+      credentials: GCS_KEY,
+      usingUniformAcl: true,
+      urlBuilder: {
+        async generateSignedURL(fileKey, fileBucket, options, storage) {
+          const response = await storage
+            .bucket(fileBucket)
+            .file(fileKey)
+            .getSignedUrl({
+              ...options,
+              cname: 'https://cdn.example.com',
+            })
+          return response[0]
+        },
+      },
+    })
+
+    const fileURL = new URL(await fdgcs.getSignedUrl(key))
+    assert.equal(fileURL.host, 'cdn.example.com')
+  })
 })

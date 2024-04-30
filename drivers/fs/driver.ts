@@ -26,6 +26,7 @@ import type {
   ObjectMetaData,
   DriverContract,
   ObjectVisibility,
+  SignedURLOptions,
 } from '../../src/types.js'
 
 /**
@@ -146,6 +147,45 @@ export class FSDriver implements DriverContract {
    */
   async getVisibility(_: string): Promise<ObjectVisibility> {
     return this.options.visibility
+  }
+
+  /**
+   * Returns the public URL of the file. This method does not check
+   * if the file exists or not.
+   */
+  async getUrl(key: string): Promise<string> {
+    const location = join(this.#rootUrl, key)
+    const generateURL = this.options.urlBuilder?.generateURL
+    if (generateURL) {
+      return generateURL(key, location)
+    }
+
+    throw new Error('')
+  }
+
+  /**
+   * Returns the signed/temporary URL of the file. By default, the signed URLs
+   * expire in 30mins, but a custom expiry can be defined using
+   * "options.expiresIn" property.
+   */
+  async getSignedUrl(key: string, options?: SignedURLOptions): Promise<string> {
+    const location = join(this.#rootUrl, key)
+    const normalizedOptions = Object.assign(
+      {
+        expiresIn: '30 mins',
+      },
+      options
+    )
+
+    /**
+     * Use custom implementation when exists.
+     */
+    const generateSignedURL = this.options.urlBuilder?.generateSignedURL
+    if (generateSignedURL) {
+      return generateSignedURL(key, location, normalizedOptions)
+    }
+
+    throw new Error('')
   }
 
   /**

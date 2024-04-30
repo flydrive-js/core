@@ -8,26 +8,26 @@
  */
 
 import { type Readable } from 'node:stream'
+import string from '@poppinss/utils/string'
 import {
-  GetFilesOptions,
-  SaveOptions,
   Storage,
+  SaveOptions,
   FileMetadata,
+  GetFilesOptions,
   GetSignedUrlConfig,
 } from '@google-cloud/storage'
 
 import debug from './debug.js'
 import type { GCSDriverOptions } from './types.js'
 import { DriveFile } from '../../src/driver_file.js'
-import type {
-  DriverContract,
-  ObjectMetaData,
-  ObjectVisibility,
-  SignedURLOptions,
-  WriteOptions,
-} from '../../src/types.js'
 import { DriveDirectory } from '../../src/drive_directory.js'
-import string from '@poppinss/utils/string'
+import type {
+  WriteOptions,
+  ObjectMetaData,
+  DriverContract,
+  SignedURLOptions,
+  ObjectVisibility,
+} from '../../src/types.js'
 
 /**
  * Implementation of FlyDrive driver that reads and persists files
