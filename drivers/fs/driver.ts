@@ -253,7 +253,7 @@ export class FSDriver implements DriverContract {
     > {
       for (const file of files) {
         // @ts-expect-error "Dirent.parentPath" is the new property, but missing on types
-        const relativeName = relative(self.#rootUrl, join(file.parentPath, file.name))
+        const relativeName = relative(self.#rootUrl, join(file.parentPath || file.path, file.name))
         if (file.isFile()) {
           yield new DriveFile(relativeName, self)
         } else if (!recursive) {
