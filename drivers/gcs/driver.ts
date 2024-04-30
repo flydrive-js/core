@@ -7,8 +7,7 @@
  * file that was distributed with this source code.
  */
 
-import type { Readable } from 'node:stream'
-import { pipeline } from 'node:stream/promises'
+import { type Readable } from 'node:stream'
 import { GetFilesOptions, SaveOptions, Storage, FileMetadata } from '@google-cloud/storage'
 
 import debug from './debug.js'
@@ -204,15 +203,21 @@ export class GCSDriver implements DriverContract {
   /**
    * Writes a file to the bucket for the given key and stream
    */
-  async putStream(
-    key: string,
-    contents: Readable,
-    options?: WriteOptions | undefined
-  ): Promise<void> {
+  putStream(key: string, contents: Readable, options?: WriteOptions | undefined): Promise<void> {
+    const bucket = this.#storage.bucket(this.options.bucket)
     return new Promise((resolve, reject) => {
-      const bucket = this.#storage.bucket(this.options.bucket)
+      /**
+       * GCS internally creates a pipeline of stream and invokes the "_destroy" method
+       * at several occassions. Because of that, the "_destroy" method emits an event
+       * which cannot handled within this block of code.
+       *
+       * So the only way I have been able to make GCS streams work is by ditching the
+       * pipeline method and relying on the "pipe" method instead.
+       */
       const writeable = bucket.file(key).createWriteStream(this.#getSaveOptions(options))
-      return pipeline(contents, writeable, { end: false }).then(resolve).catch(reject)
+      writeable.once('error', reject)
+      contents.once('error', reject)
+      contents.pipe(writeable).on('finish', resolve).on('error', reject)
     })
   }
 
