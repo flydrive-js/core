@@ -10,6 +10,7 @@
 import etag from 'etag'
 import mimeTypes from 'mime-types'
 import { Readable } from 'node:stream'
+import { slash } from '@poppinss/utils'
 import * as fsp from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
 import { createReadStream } from 'node:fs'
@@ -252,8 +253,10 @@ export class FSDriver implements DriverContract {
       DriveFile | { isFile: false; isDirectory: true; prefix: string; name: string }
     > {
       for (const file of files) {
-        // @ts-expect-error "Dirent.parentPath" is the new property, but missing on types
-        const relativeName = relative(self.#rootUrl, join(file.parentPath || file.path, file.name))
+        const relativeName = slash(
+          // @ts-expect-error "Dirent.parentPath" is the new property, but missing on types
+          relative(self.#rootUrl, join(file.parentPath || file.path, file.name))
+        )
         if (file.isFile()) {
           yield new DriveFile(relativeName, self)
         } else if (!recursive) {
