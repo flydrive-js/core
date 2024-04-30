@@ -254,6 +254,10 @@ test.group('GCS Driver | putStream', (group) => {
       usingUniformAcl: true,
     })
 
+    process.on('uncaughtException', (error) => {
+      console.log(error.stack)
+    })
+
     await assert.rejects(async () => {
       await fdfs.putStream(key, createReadStream(join(fs.basePath, key)))
     }, /ENOENT: no such file or directory/)
