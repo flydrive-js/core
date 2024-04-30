@@ -7,7 +7,7 @@
  * file that was distributed with this source code.
  */
 
-import type { Storage, StorageOptions } from '@google-cloud/storage'
+import type { GetSignedUrlConfig, Storage, StorageOptions } from '@google-cloud/storage'
 import type { ObjectVisibility } from '../../src/types.js'
 
 /**
@@ -34,6 +34,27 @@ type GCSDriverBaseOptions = {
    * will have no impact.
    */
   usingUniformAcl?: boolean
+
+  /**
+   * Configure a custom URL builder for creating public and
+   * temporary URLs
+   */
+  urlBuilder?: {
+    /**
+     * Custom implementation for creating public URLs
+     */
+    generateURL?(key: string, bucket: string, storage: Storage): Promise<string>
+
+    /**
+     * Custom implementation for creating signed/temporary URLs
+     */
+    generateSignedURL?(
+      key: string,
+      bucket: string,
+      config: GetSignedUrlConfig,
+      storage: Storage
+    ): Promise<string>
+  }
 }
 
 /**

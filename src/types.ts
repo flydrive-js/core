@@ -43,6 +43,21 @@ export type WriteOptions = {
 }
 
 /**
+ * Options accepted during the creation of a signed URL.
+ */
+export type SignedURLOptions = {
+  expiresIn?: string | number
+  contentType?: string
+  // contentLanguage?: string
+  // contentEncoding?: string
+  contentDisposition?: string
+  // cacheControl?: string
+  // contentLength?: number
+} & {
+  [key: string]: any
+}
+
+/**
  * The interface every driver must implement.
  */
 export interface DriverContract {
@@ -81,6 +96,16 @@ export interface DriverContract {
    * Return the visibility of the file
    */
   getVisibility(key: string): Promise<ObjectVisibility>
+
+  /**
+   * Return the public URL to access the file
+   */
+  getUrl(key: string): Promise<string>
+
+  /**
+   * Return the signed/temporary URL to access the file
+   */
+  getSignedUrl(key: string, options?: SignedURLOptions): Promise<string>
 
   /**
    * Update the visibility of the file

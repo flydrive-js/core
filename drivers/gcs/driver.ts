@@ -8,7 +8,13 @@
  */
 
 import { type Readable } from 'node:stream'
-import { GetFilesOptions, SaveOptions, Storage, FileMetadata } from '@google-cloud/storage'
+import {
+  GetFilesOptions,
+  SaveOptions,
+  Storage,
+  FileMetadata,
+  GetSignedUrlConfig,
+} from '@google-cloud/storage'
 
 import debug from './debug.js'
 import type { GCSDriverOptions } from './types.js'
@@ -17,9 +23,11 @@ import type {
   DriverContract,
   ObjectMetaData,
   ObjectVisibility,
+  SignedURLOptions,
   WriteOptions,
 } from '../../src/types.js'
 import { DriveDirectory } from '../../src/drive_directory.js'
+import string from '@poppinss/utils/string'
 
 /**
  * Implementation of FlyDrive driver that reads and persists files
@@ -187,6 +195,61 @@ export class GCSDriver implements DriverContract {
     const bucket = this.#storage.bucket(this.options.bucket)
     const [isFilePublic] = await bucket.file(key).isPublic()
     return isFilePublic ? 'public' : 'private'
+  }
+
+  /**
+   * Returns the public URL of the file. This method does not check
+   * if the file exists or not.
+   */
+  async getUrl(key: string): Promise<string> {
+    /**
+     * Use custom implementation when exists.
+     */
+    const generateURL = this.options.urlBuilder?.generateURL
+    if (generateURL) {
+      return generateURL(key, this.options.bucket, this.#storage)
+    }
+
+    const bucket = this.#storage.bucket(this.options.bucket)
+    const file = bucket.file(key)
+    return file.publicUrl()
+  }
+
+  /**
+   * Returns the signed/temporary URL of the file. By default, the signed URLs
+   * expire in 30mins, but a custom expiry can be defined using
+   * "options.expiresIn" property.
+   */
+  async getSignedUrl(key: string, options?: SignedURLOptions): Promise<string> {
+    const { contentDisposition, contentType, expiresIn, ...rest } = Object.assign({}, options)
+
+    /**
+     * Options passed to GCS when generating the signed URL.
+     */
+    const expires = new Date()
+    expires.setSeconds(new Date().getSeconds() + string.seconds.parse(expiresIn || '30mins'))
+
+    const signedURLOptions: GetSignedUrlConfig = {
+      action: 'read',
+      expires: expires,
+      responseType: contentType,
+      responseDisposition: contentDisposition,
+      ...rest,
+    }
+
+    /**
+     * Use custom implementation when exists.
+     */
+    const generateSignedURL = this.options.urlBuilder?.generateSignedURL
+    if (generateSignedURL) {
+      return generateSignedURL(key, this.options.bucket, signedURLOptions, this.#storage)
+    }
+
+    const bucket = this.#storage.bucket(this.options.bucket)
+    const file = bucket.file(key)
+
+    const response = await file.getSignedUrl(signedURLOptions)
+    return response[0]
   }
 
   /**
