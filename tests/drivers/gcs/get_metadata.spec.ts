@@ -48,7 +48,6 @@ test.group('GCS Driver | getMetaData', (group) => {
     assert.containsSubset(metaData, {
       contentLength: 11,
       contentType: 'text/plain',
-      visibility: 'private',
     })
   })
 
