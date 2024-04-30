@@ -106,7 +106,9 @@ test.group('GCS Driver | move', (group) => {
     await fdgcs.move(source, destination)
 
     const metaData = await fdgcs.getMetaData(destination)
-    assert.equal(metaData.visibility, 'private')
+    const visibility = await fdgcs.getVisibility(destination)
+
+    assert.equal(visibility, 'private')
     assert.equal(metaData.contentType, 'image/png')
 
     const existsResponse = await noUniformedAclBucket.file(source).exists()

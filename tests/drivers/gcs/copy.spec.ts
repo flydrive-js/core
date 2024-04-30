@@ -101,8 +101,9 @@ test.group('GCS Driver | copy', (group) => {
 
     await fdgcs.copy(source, destination)
     const metaData = await fdgcs.getMetaData(destination)
+    const visibility = await fdgcs.getVisibility(destination)
 
-    assert.equal(metaData.visibility, 'private')
+    assert.equal(visibility, 'private')
     assert.equal(metaData.contentType, 'image/png')
 
     const existsResponse = await noUniformedAclBucket.file(source).exists()
