@@ -11,6 +11,7 @@
     "!build/bin",
     "!build/tests"
   ],
+  "main": "build/index.js",
   "exports": {
     ".": "./build/index.js",
     "./types": "./build/src/types.js",
@@ -114,5 +115,13 @@
     "dts": false,
     "sourcemap": true,
     "target": "esnext"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/flydrive-js/core.git"
+  },
+  "bugs": {
+    "url": "https://github.com/flydrive-js/core/issues"
+  },
+  "homepage": "https://github.com/flydrive-js/core#readme"
 }
