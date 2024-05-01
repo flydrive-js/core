@@ -48,11 +48,7 @@ export type WriteOptions = {
 export type SignedURLOptions = {
   expiresIn?: string | number
   contentType?: string
-  // contentLanguage?: string
-  // contentEncoding?: string
   contentDisposition?: string
-  // cacheControl?: string
-  // contentLength?: number
 } & {
   [key: string]: any
 }

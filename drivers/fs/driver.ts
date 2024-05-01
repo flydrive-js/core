@@ -18,6 +18,7 @@ import { Retrier } from '@humanwhocodes/retry'
 import { RuntimeException } from '@poppinss/utils'
 import { dirname, join, relative } from 'node:path'
 
+import debug from './debug.js'
 import type { FSDriverOptions } from './types.js'
 import { DriveFile } from '../../src/driver_file.js'
 import { DriveDirectory } from '../../src/drive_directory.js'
@@ -56,6 +57,8 @@ export class FSDriver implements DriverContract {
   constructor(public options: FSDriverOptions) {
     this.#rootUrl =
       typeof options.location === 'string' ? options.location : fileURLToPath(options.location)
+
+    debug('driver config %O', options)
   }
 
   /**
@@ -85,6 +88,7 @@ export class FSDriver implements DriverContract {
    * Returns a boolean indicating if the file exists or not.
    */
   async exist(key: string): Promise<boolean> {
+    debug('checking if file exists %s:%s', this.#rootUrl, key)
     const location = join(this.#rootUrl, key)
     try {
       const object = await fsp.stat(location)
@@ -102,6 +106,7 @@ export class FSDriver implements DriverContract {
    * exception is thrown when the file is missing.
    */
   async get(key: string): Promise<string> {
+    debug('reading file contents %s:%s', this.#rootUrl, key)
     return this.#read(key).then((value) => value.toString('utf-8'))
   }
 
@@ -110,6 +115,7 @@ export class FSDriver implements DriverContract {
    * exception is thrown when the file is missing.
    */
   async getStream(key: string): Promise<Readable> {
+    debug('reading file contents as a stream %s:%s', this.#rootUrl, key)
     const location = join(this.#rootUrl, key)
     return createReadStream(location)
   }
@@ -119,6 +125,7 @@ export class FSDriver implements DriverContract {
    * exception is thrown when the file is missing.
    */
   async getArrayBuffer(key: string): Promise<ArrayBuffer> {
+    debug('reading file contents as array buffer %s:%s', this.#rootUrl, key)
     return this.#read(key).then((value) => new Uint8Array(value.buffer))
   }
 
@@ -126,6 +133,7 @@ export class FSDriver implements DriverContract {
    * Returns the metadata of a file.
    */
   async getMetaData(key: string): Promise<ObjectMetaData> {
+    debug('fetching file metadata %s:%s', this.#rootUrl, key)
     const location = join(this.#rootUrl, key)
     const stats = await fsp.stat(location)
 
@@ -157,6 +165,7 @@ export class FSDriver implements DriverContract {
     const location = join(this.#rootUrl, key)
     const generateURL = this.options.urlBuilder?.generateURL
     if (generateURL) {
+      debug('generating public URL %s:%s', this.#rootUrl, key)
       return generateURL(key, location)
     }
 
@@ -182,6 +191,7 @@ export class FSDriver implements DriverContract {
      */
     const generateSignedURL = this.options.urlBuilder?.generateSignedURL
     if (generateSignedURL) {
+      debug('generating signed URL %s:%s', this.#rootUrl, key)
       return generateSignedURL(key, location, normalizedOptions)
     }
 
@@ -201,6 +211,7 @@ export class FSDriver implements DriverContract {
    * - Existing file will be overwritten.
    */
   put(key: string, contents: string | Uint8Array, options?: WriteOptions): Promise<void> {
+    debug('creating/updating file %s:%s', this.#rootUrl, key)
     return this.#write(key, contents, { signal: options?.signal })
   }
 
@@ -212,6 +223,7 @@ export class FSDriver implements DriverContract {
    * - Existing file will be overwritten.
    */
   putStream(key: string, contents: Readable, options?: WriteOptions): Promise<void> {
+    debug('creating/updating file using readable stream %s:%s', this.#rootUrl, key)
     return new Promise((resolve, reject) => {
       contents.once('error', (error) => reject(error))
       return this.#write(key, contents, { signal: options?.signal }).then(resolve).catch(reject)
@@ -223,8 +235,10 @@ export class FSDriver implements DriverContract {
    * be within the root location.
    */
   copy(source: string, destination: string): Promise<void> {
+    debug('copying file from %s to %s', source, destination)
     const sourceLocation = join(this.#rootUrl, source)
     const destinationLocation = join(this.#rootUrl, destination)
+
     return this.#retrier.retry(async () => {
       await fsp.mkdir(dirname(destinationLocation), { recursive: true })
       await fsp.copyFile(sourceLocation, destinationLocation)
@@ -236,8 +250,10 @@ export class FSDriver implements DriverContract {
    * be within the root location.
    */
   move(source: string, destination: string): Promise<void> {
+    debug('moving file from %s to %s', source, destination)
     const sourceLocation = join(this.#rootUrl, source)
     const destinationLocation = join(this.#rootUrl, destination)
+
     return this.#retrier.retry(async () => {
       await fsp.mkdir(dirname(destinationLocation), { recursive: true })
       await fsp.copyFile(sourceLocation, destinationLocation)
@@ -251,7 +267,9 @@ export class FSDriver implements DriverContract {
    * a noop.
    */
   delete(key: string): Promise<void> {
+    debug('deleting file %s:%s', this.#rootUrl, key)
     const location = join(this.#rootUrl, key)
+
     return this.#retrier.retry(async () => {
       try {
         await fsp.unlink(location)
@@ -269,7 +287,9 @@ export class FSDriver implements DriverContract {
    * command
    */
   deleteAll(prefix: string): Promise<void> {
+    debug('deleting all files in folder %s:%s', this.#rootUrl, prefix)
     const location = join(this.#rootUrl, prefix)
+
     return this.#retrier.retry(async () => {
       return fsp.rm(location, { recursive: true, force: true })
     })
@@ -292,6 +312,7 @@ export class FSDriver implements DriverContract {
     const self = this
     const location = join(this.#rootUrl, prefix)
     const { recursive } = Object.assign({ recursive: false }, options)
+    debug('listing files from folder %s:%s %O', this.#rootUrl, prefix, options)
 
     /**
      * Reading files with their types.

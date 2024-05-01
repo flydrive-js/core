@@ -42,6 +42,13 @@ export class GCSDriver implements DriverContract {
     if (options.usingUniformAcl !== undefined) {
       this.#usingUniformAcl = options.usingUniformAcl
     }
+
+    if (debug.enabled) {
+      debug('driver config %O', {
+        ...options,
+        credentials: 'REDACTED',
+      })
+    }
   }
 
   /**
@@ -85,7 +92,7 @@ export class GCSDriver implements DriverContract {
       gcsOptions.predefinedAcl = gcsOptions.public ? 'publicRead' : 'private'
     }
 
-    debug('gcs write options %s', gcsOptions)
+    debug('gcs write options %O', gcsOptions)
     return gcsOptions
   }
 
@@ -101,6 +108,7 @@ export class GCSDriver implements DriverContract {
       lastModified: new Date(apiFile.updated!),
     }
 
+    debug('file metadata %O', this.options.bucket, metaData)
     return metaData
   }
 
@@ -118,6 +126,8 @@ export class GCSDriver implements DriverContract {
     options: GetFilesOptions
   ): Promise<{ files: FileMetadata[]; prefixes: string[]; paginationToken?: string }> {
     const bucket = this.#storage.bucket(this.options.bucket)
+    debug('fetching files list %O', options)
+
     return new Promise((resolve, reject) => {
       bucket.request(
         {
@@ -126,8 +136,10 @@ export class GCSDriver implements DriverContract {
         },
         (error, response) => {
           if (error) {
+            debug('list files API error %O', error)
             reject(error)
           } else {
+            debug('list files API response %O', response)
             resolve({
               files: response.items || [],
               paginationToken: response.nextPageToken,
@@ -144,7 +156,9 @@ export class GCSDriver implements DriverContract {
    * or not.
    */
   async exist(key: string): Promise<boolean> {
+    debug('checking if file exists %s:%s', this.options.bucket, key)
     const bucket = this.#storage.bucket(this.options.bucket)
+
     const response = await bucket.file(key).exists()
     return response[0]
   }
@@ -154,7 +168,9 @@ export class GCSDriver implements DriverContract {
    * exception is thrown when object is missing.
    */
   async get(key: string): Promise<string> {
+    debug('reading file contents %s:%s', this.options.bucket, key)
     const bucket = this.#storage.bucket(this.options.bucket)
+
     const response = await bucket.file(key).download()
     return response[0].toString('utf-8')
   }
@@ -164,7 +180,9 @@ export class GCSDriver implements DriverContract {
    * exception is thrown when the file is missing.
    */
   async getStream(key: string): Promise<Readable> {
+    debug('reading file contents as a stream %s:%s', this.options.bucket, key)
     const bucket = this.#storage.bucket(this.options.bucket)
+
     return bucket.file(key).createReadStream()
   }
 
@@ -173,7 +191,9 @@ export class GCSDriver implements DriverContract {
    * exception is thrown when the file is missing.
    */
   async getArrayBuffer(key: string): Promise<ArrayBuffer> {
+    debug('reading file contents as array buffer %s:%s', this.options.bucket, key)
     const bucket = this.#storage.bucket(this.options.bucket)
+
     const response = await bucket.file(key).download()
     return new Uint8Array(response[0])
   }
@@ -182,9 +202,10 @@ export class GCSDriver implements DriverContract {
    * Returns the file metadata.
    */
   async getMetaData(key: string): Promise<ObjectMetaData> {
+    debug('fetching file metadata %s:%s', this.options.bucket, key)
     const bucket = this.#storage.bucket(this.options.bucket)
-    const response = await bucket.file(key).getMetadata()
 
+    const response = await bucket.file(key).getMetadata()
     return this.#createFileMetaData(response[0])
   }
 
@@ -192,7 +213,9 @@ export class GCSDriver implements DriverContract {
    * Returns the visibility of a file
    */
   async getVisibility(key: string): Promise<ObjectVisibility> {
+    debug('fetching file visibility %s:%s', this.options.bucket, key)
     const bucket = this.#storage.bucket(this.options.bucket)
+
     const [isFilePublic] = await bucket.file(key).isPublic()
     return isFilePublic ? 'public' : 'private'
   }
@@ -207,9 +230,11 @@ export class GCSDriver implements DriverContract {
      */
     const generateURL = this.options.urlBuilder?.generateURL
     if (generateURL) {
+      debug('using custom implementation for generating public URL %s:%s', this.options.bucket, key)
       return generateURL(key, this.options.bucket, this.#storage)
     }
 
+    debug('generating public URL %s:%s', this.options.bucket, key)
     const bucket = this.#storage.bucket(this.options.bucket)
     const file = bucket.file(key)
     return file.publicUrl()
@@ -242,9 +267,11 @@ export class GCSDriver implements DriverContract {
      */
     const generateSignedURL = this.options.urlBuilder?.generateSignedURL
     if (generateSignedURL) {
+      debug('using custom implementation for generating signed URL %s:%s', this.options.bucket, key)
       return generateSignedURL(key, this.options.bucket, signedURLOptions, this.#storage)
     }
 
+    debug('generating signed URL %s:%s', this.options.bucket, key)
     const bucket = this.#storage.bucket(this.options.bucket)
     const file = bucket.file(key)
 
@@ -256,6 +283,7 @@ export class GCSDriver implements DriverContract {
    * Updates the visibility of a file
    */
   async setVisibility(key: string, visibility: ObjectVisibility): Promise<void> {
+    debug('updating file visibility %s:%s to %s', this.options.bucket, key, visibility)
     const bucket = this.#storage.bucket(this.options.bucket)
 
     const file = bucket.file(key)
@@ -274,6 +302,7 @@ export class GCSDriver implements DriverContract {
     contents: string | Uint8Array,
     options?: WriteOptions | undefined
   ): Promise<void> {
+    debug('creating/updating file %s:%s', this.options.bucket, key)
     const bucket = this.#storage.bucket(this.options.bucket)
     await bucket.file(key).save(Buffer.from(contents), this.#getSaveOptions(options))
   }
@@ -282,7 +311,9 @@ export class GCSDriver implements DriverContract {
    * Writes a file to the bucket for the given key and stream
    */
   putStream(key: string, contents: Readable, options?: WriteOptions | undefined): Promise<void> {
+    debug('creating/updating file using readable stream %s:%s', this.options.bucket, key)
     const bucket = this.#storage.bucket(this.options.bucket)
+
     return new Promise((resolve, reject) => {
       /**
        * GCS internally creates a pipeline of stream and invokes the "_destroy" method
@@ -304,6 +335,13 @@ export class GCSDriver implements DriverContract {
    * be within the root location.
    */
   async copy(source: string, destination: string, options?: WriteOptions): Promise<void> {
+    debug(
+      'copying file from %s:%s to %s:%s',
+      this.options.bucket,
+      source,
+      this.options.bucket,
+      destination
+    )
     const bucket = this.#storage.bucket(this.options.bucket)
     options = options || {}
 
@@ -325,6 +363,14 @@ export class GCSDriver implements DriverContract {
    * be within the root location.
    */
   async move(source: string, destination: string, options?: WriteOptions): Promise<void> {
+    debug(
+      'moving file from %s:%s to %s:%s',
+      this.options.bucket,
+      source,
+      this.options.bucket,
+      destination
+    )
+
     const bucket = this.#storage.bucket(this.options.bucket)
     options = options || {}
 
@@ -345,6 +391,7 @@ export class GCSDriver implements DriverContract {
    * Deletes the object from the bucket
    */
   async delete(key: string) {
+    debug('removing file %s:%s', this.options.bucket, key)
     const bucket = this.#storage.bucket(this.options.bucket)
     await bucket.file(key).delete({ ignoreNotFound: true })
   }
@@ -355,6 +402,7 @@ export class GCSDriver implements DriverContract {
    */
   async deleteAll(prefix: string): Promise<void> {
     const bucket = this.#storage.bucket(this.options.bucket)
+    debug('removing all files matching prefix %s:%s', this.options.bucket, prefix)
     await bucket.deleteFiles({ prefix: `${prefix.replace(/\/$/, '')}/` })
   }
 
