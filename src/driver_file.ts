@@ -12,7 +12,7 @@ import { Readable } from 'node:stream'
 
 import * as errors from './errors.js'
 import { KeyNormalizer } from './key_normalizer.js'
-import type { DriverContract, ObjectMetaData, ObjectVisibility } from './types.js'
+import type { DriverContract, ObjectMetaData, ObjectVisibility, SignedURLOptions } from './types.js'
 
 /**
  * DriveFile is a pointer to a given object. It can be used to lazily
@@ -37,6 +37,11 @@ export class DriveFile {
   #normalizer = new KeyNormalizer()
 
   /**
+   * Reference to the normalized file key
+   */
+  key: string
+
+  /**
    * The basename of the file. Extracted from the key
    */
   name: string
@@ -47,13 +52,10 @@ export class DriveFile {
   isFile: true = true
   isDirectory: false = false
 
-  constructor(
-    public key: string,
-    driver: DriverContract,
-    metaData?: ObjectMetaData
-  ) {
+  constructor(key: string, driver: DriverContract, metaData?: ObjectMetaData) {
     this.#driver = driver
     this.#metaData = metaData
+    this.key = this.#normalizer.normalize(key)
     this.name = basename(this.key)
   }
 
@@ -62,11 +64,10 @@ export class DriveFile {
    * if you need more control over the file contents decoding.
    */
   async get(): Promise<string> {
-    const key = this.#normalizer.normalize(this.key)
     try {
-      return await this.#driver.get(key)
+      return await this.#driver.get(this.key)
     } catch (error) {
-      throw new errors.E_CANNOT_READ_FILE([key], { cause: error })
+      throw new errors.E_CANNOT_READ_FILE([this.key], { cause: error })
     }
   }
 
@@ -74,11 +75,10 @@ export class DriveFile {
    * Returns file contents as a Readable stream.
    */
   async getStream(): Promise<Readable> {
-    const key = this.#normalizer.normalize(this.key)
     try {
-      return await this.#driver.getStream(key)
+      return await this.#driver.getStream(this.key)
     } catch (error) {
-      throw new errors.E_CANNOT_READ_FILE([key], { cause: error })
+      throw new errors.E_CANNOT_READ_FILE([this.key], { cause: error })
     }
   }
 
@@ -86,11 +86,10 @@ export class DriveFile {
    * Returns file contents as a Uint8Array.
    */
   async getArrayBuffer(): Promise<ArrayBuffer> {
-    const key = this.#normalizer.normalize(this.key)
     try {
-      return await this.#driver.getArrayBuffer(key)
+      return await this.#driver.getArrayBuffer(this.key)
     } catch (error) {
-      throw new errors.E_CANNOT_READ_FILE([key], { cause: error })
+      throw new errors.E_CANNOT_READ_FILE([this.key], { cause: error })
     }
   }
 
@@ -102,11 +101,10 @@ export class DriveFile {
       return this.#metaData
     }
 
-    const key = this.#normalizer.normalize(this.key)
     try {
-      return await this.#driver.getMetaData(key)
+      return await this.#driver.getMetaData(this.key)
     } catch (error) {
-      throw new errors.E_CANNOT_GET_METADATA([key], { cause: error })
+      throw new errors.E_CANNOT_GET_METADATA([this.key], { cause: error })
     }
   }
 
@@ -114,11 +112,32 @@ export class DriveFile {
    * Returns the visibility of the file
    */
   async getVisibility(): Promise<ObjectVisibility> {
-    const key = this.#normalizer.normalize(this.key)
     try {
-      return await this.#driver.getVisibility(key)
+      return await this.#driver.getVisibility(this.key)
     } catch (error) {
-      throw new errors.E_CANNOT_GET_METADATA([key], { cause: error })
+      throw new errors.E_CANNOT_GET_METADATA([this.key], { cause: error })
+    }
+  }
+
+  /**
+   * Returns the public URL of the file
+   */
+  async getUrl() {
+    try {
+      return await this.#driver.getUrl(this.key)
+    } catch (error) {
+      throw new errors.E_CANNOT_GENERATE_URL([this.key], { cause: error })
+    }
+  }
+
+  /**
+   * Returns a signed/temporary URL of the file
+   */
+  async getSignedUrl(options?: SignedURLOptions) {
+    try {
+      return await this.#driver.getSignedUrl(this.key, options)
+    } catch (error) {
+      throw new errors.E_CANNOT_GENERATE_URL([this.key], { cause: error })
     }
   }
 }

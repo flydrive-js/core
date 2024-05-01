@@ -257,8 +257,13 @@ export class GCSDriver implements DriverContract {
    */
   async setVisibility(key: string, visibility: ObjectVisibility): Promise<void> {
     const bucket = this.#storage.bucket(this.options.bucket)
+
     const file = bucket.file(key)
-    visibility === 'private' ? await file.makePrivate() : await file.makePublic()
+    if (visibility === 'private') {
+      await file.makePrivate()
+    } else {
+      await file.makePublic()
+    }
   }
 
   /**
@@ -381,7 +386,7 @@ export class GCSDriver implements DriverContract {
       includeFoldersAsPrefixes: !recursive,
       pageToken: paginationToken,
       ...(prefix !== '/' ? { prefix } : {}),
-      ...(maxResults ? { maxResults } : {}),
+      ...(maxResults !== undefined ? { maxResults } : {}),
     })
 
     /**
@@ -400,7 +405,7 @@ export class GCSDriver implements DriverContract {
     }
 
     return {
-      paginationToken: undefined,
+      paginationToken: response.paginationToken,
       objects: {
         [Symbol.iterator]: filesGenerator,
       },

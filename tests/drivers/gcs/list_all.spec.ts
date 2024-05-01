@@ -130,16 +130,16 @@ test.group('GCS Driver | listAll | root dir', (group) => {
      */
     const expectedResultSet = [
       {
-        isDirectory: true,
-        isFile: false,
-        name: 'baz',
-        prefix: 'baz',
+        isDirectory: false,
+        isFile: true,
+        name: fileName,
+        key: `foo/bar/${fileName}`,
       },
       {
-        isDirectory: true,
-        isFile: false,
-        name: 'foo',
-        prefix: 'foo',
+        isDirectory: false,
+        isFile: true,
+        name: fileName,
+        key: `baz/${fileName}`,
       },
       {
         isDirectory: false,
@@ -170,6 +170,7 @@ test.group('GCS Driver | listAll | root dir', (group) => {
       }
     )
     assert.containsSubset(expectedResultSet, Array.from(page2Objects))
+    assert.notDeepEqual(Array.from(page2Objects), Array.from(objects))
 
     /**
      * Page 3
@@ -180,6 +181,7 @@ test.group('GCS Driver | listAll | root dir', (group) => {
       paginationToken: page2PaginationToken,
     })
     assert.containsSubset(expectedResultSet, Array.from(page3Objects))
+    assert.notDeepEqual(Array.from(page3Objects), Array.from(page2Objects))
   })
 })
 

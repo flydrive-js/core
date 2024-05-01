@@ -160,7 +160,7 @@ export class FSDriver implements DriverContract {
       return generateURL(key, location)
     }
 
-    throw new Error('')
+    throw new RuntimeException('Cannot generate URL. The "fs" driver does not support it')
   }
 
   /**
@@ -185,7 +185,7 @@ export class FSDriver implements DriverContract {
       return generateSignedURL(key, location, normalizedOptions)
     }
 
-    throw new Error('')
+    throw new RuntimeException('Cannot generate signed URL. The "fs" driver does not support it')
   }
 
   /**

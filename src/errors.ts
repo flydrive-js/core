@@ -81,13 +81,13 @@ export const E_CANNOT_SET_VISIBILITY = createError<[key: string]>(
   'E_CANNOT_SET_VISIBILITY'
 )
 
-// /**
-//  * Unable to generate URL for a file
-//  */
-// export const E_CANNOT_GENERATE_URL = createError<[action: string, key: string]>(
-//   'Cannot generate URL for file at location "%s"',
-//   'E_CANNOT_GENERATE_URL'
-// )
+/**
+ * Unable to generate URL for a file
+ */
+export const E_CANNOT_GENERATE_URL = createError<[key: string]>(
+  'Cannot generate URL for file at location "%s"',
+  'E_CANNOT_GENERATE_URL'
+)
 
 /**
  * The file key has unallowed set of characters
