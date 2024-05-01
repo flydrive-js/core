@@ -7,9 +7,9 @@
   },
   "type": "module",
   "files": [
-    "build/src",
-    "build/index.d.ts",
-    "build/index.js"
+    "build",
+    "!build/bin",
+    "!build/tests"
   ],
   "exports": {
     ".": "./build/index.js",
@@ -104,7 +104,9 @@
       "./index.ts",
       "./src/types.ts",
       "./drivers/fs/main.ts",
-      "./drivers/fs/types.ts"
+      "./drivers/fs/types.ts",
+      "./drivers/gcs/main.ts",
+      "./drivers/gcs/types.ts"
     ],
     "outDir": "./build",
     "clean": true,
