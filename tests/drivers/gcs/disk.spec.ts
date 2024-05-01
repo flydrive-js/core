@@ -12,10 +12,10 @@ import { test } from '@japa/runner'
 import string from '@poppinss/utils/string'
 import { Storage } from '@google-cloud/storage'
 
-import { Disk } from '../../src/disk.js'
-import * as errors from '../../src/errors.js'
-import { GCSDriver } from '../../drivers/gcs/driver.js'
-import { GCS_BUCKET, GCS_FINE_GRAINED_ACL_BUCKET, GCS_KEY } from '../helpers.js'
+import { Disk } from '../../../src/disk.js'
+import * as errors from '../../../src/errors.js'
+import { GCSDriver } from '../../../drivers/gcs/driver.js'
+import { GCS_BUCKET, GCS_FINE_GRAINED_ACL_BUCKET, GCS_KEY } from '../../helpers.js'
 
 /**
  * Direct access to Google cloud storage bucket
@@ -28,7 +28,7 @@ const noUniformedAclBucket = new Storage({
   credentials: GCS_KEY,
 }).bucket(GCS_FINE_GRAINED_ACL_BUCKET)
 
-test.group('Disk | copyFromFs', (group) => {
+test.group('Disk | GCS | copyFromFs', (group) => {
   group.each.setup(() => {
     return async () => {
       await bucket.deleteFiles()
@@ -80,7 +80,7 @@ test.group('Disk | copyFromFs', (group) => {
   })
 })
 
-test.group('Disk | moveFromFs', (group) => {
+test.group('Disk | GCS | moveFromFs', (group) => {
   group.each.setup(() => {
     return async () => {
       await bucket.deleteFiles()
