@@ -7,6 +7,8 @@
  * file that was distributed with this source code.
  */
 
+import { unlink } from 'node:fs/promises'
+import { createReadStream } from 'node:fs'
 import type { Readable } from 'node:stream'
 
 import * as errors from './errors.js'
@@ -126,6 +128,13 @@ export class Disk {
   }
 
   /**
+   * Copies file from the local filesystem to the cloud provider.
+   */
+  copyFromFs(source: string | URL, destination: string, options?: WriteOptions) {
+    return this.putStream(destination, createReadStream(source), options)
+  }
+
+  /**
    * Moves file from the "source" to the "destination" within the
    * same bucket or the root location of local filesystem.
    *
@@ -140,6 +149,14 @@ export class Disk {
     } catch (error) {
       throw new errors.E_CANNOT_MOVE_FILE([source, destination], { cause: error })
     }
+  }
+
+  /**
+   * Moves file from the local filesystem to the cloud provider.
+   */
+  async moveFromFs(source: string | URL, destination: string, options?: WriteOptions) {
+    await this.putStream(destination, createReadStream(source), options)
+    await unlink(source)
   }
 
   /**
