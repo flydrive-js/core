@@ -57,13 +57,13 @@ export const E_CANNOT_MOVE_FILE = createError<[source: string, destination: stri
   'E_CANNOT_MOVE_FILE'
 )
 
-// /**
-//  * Unable to check the location of the file
-//  */
-// export const E_CANNOT_CHECK_FILE_EXISTENCE = createError<[key: string]>(
-//   'Unable to check existence for file at location "%s"',
-//   'E_CANNOT_CHECK_FILE_EXISTENCE'
-// )
+/**
+ * Unable to check the location of the file
+ */
+export const E_CANNOT_CHECK_FILE_EXISTENCE = createError<[key: string]>(
+  'Unable to check existence for file at location "%s"',
+  'E_CANNOT_CHECK_FILE_EXISTENCE'
+)
 
 /**
  * Unable to get file metadata

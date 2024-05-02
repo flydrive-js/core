@@ -14,7 +14,14 @@ import type { Readable } from 'node:stream'
 import * as errors from './errors.js'
 import { DriveFile } from './driver_file.js'
 import { KeyNormalizer } from './key_normalizer.js'
-import type { DriverContract, ObjectMetaData, ObjectVisibility, WriteOptions } from './types.js'
+import { DriveDirectory } from './drive_directory.js'
+import type {
+  DriverContract,
+  ObjectMetaData,
+  ObjectVisibility,
+  SignedURLOptions,
+  WriteOptions,
+} from './types.js'
 
 /**
  * Disk offers a unified API for working with different drivers
@@ -34,6 +41,14 @@ export class Disk {
    */
   file(key: string): DriveFile {
     return new DriveFile(key, this.driver)
+  }
+
+  /**
+   * Check if the file exists. This method cannot check existence
+   * of directories.
+   */
+  exists(key: string): Promise<boolean> {
+    return this.file(key).exists()
   }
 
   /**
@@ -68,8 +83,22 @@ export class Disk {
   /**
    * Returns the visibility of the file
    */
-  async getVisibility(key: string): Promise<ObjectVisibility> {
+  getVisibility(key: string): Promise<ObjectVisibility> {
     return this.file(key).getVisibility()
+  }
+
+  /**
+   * Returns the public URL of the file
+   */
+  getUrl(key: string): Promise<string> {
+    return this.file(key).getUrl()
+  }
+
+  /**
+   * Returns a signed/temporary URL of the file
+   */
+  getSignedUrl(key: string, options?: SignedURLOptions): Promise<string> {
+    return this.file(key).getSignedUrl(options)
   }
 
   /**
@@ -183,5 +212,22 @@ export class Disk {
     } catch (error) {
       throw new errors.E_CANNOT_DELETE_DIRECTORY([prefix], { cause: error })
     }
+  }
+
+  /**
+   * Returns a list of objects which includes and files and directories.
+   * In case of "recursive" listing, no directories are returned.
+   */
+  listAll(
+    prefix: string,
+    options?: {
+      recursive?: boolean
+      paginationToken?: string
+    }
+  ): Promise<{
+    paginationToken?: string
+    objects: Iterable<DriveFile | DriveDirectory>
+  }> {
+    return this.driver.listAll(prefix, options)
   }
 }

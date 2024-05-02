@@ -60,6 +60,18 @@ export class DriveFile {
   }
 
   /**
+   * Check if the file exists. This method cannot check existence
+   * of directories.
+   */
+  async exists() {
+    try {
+      return await this.#driver.exist(this.key)
+    } catch (error) {
+      throw new errors.E_CANNOT_CHECK_FILE_EXISTENCE([this.key])
+    }
+  }
+
+  /**
    * Returns file contents as a UTF-8 string. Use "getArrayBuffer" method
    * if you need more control over the file contents decoding.
    */
