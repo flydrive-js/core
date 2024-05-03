@@ -17,6 +17,7 @@ import { KeyNormalizer } from './key_normalizer.js'
 import { DriveDirectory } from './drive_directory.js'
 import type {
   DriverContract,
+  FileSnapshot,
   ObjectMetaData,
   ObjectVisibility,
   SignedURLOptions,
@@ -41,6 +42,18 @@ export class Disk {
    */
   file(key: string): DriveFile {
     return new DriveFile(key, this.driver)
+  }
+
+  /**
+   * Creates a new instance of the DriveFile from the snapshot.
+   */
+  fromSnapshot(snapshot: FileSnapshot): DriveFile {
+    return new DriveFile(snapshot.key, this.driver, {
+      contentLength: snapshot.contentLength,
+      etag: snapshot.etag,
+      lastModified: new Date(snapshot.lastModified),
+      contentType: snapshot.contentType,
+    })
   }
 
   /**

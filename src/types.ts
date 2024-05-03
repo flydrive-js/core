@@ -54,6 +54,19 @@ export type SignedURLOptions = {
 }
 
 /**
+ * Representation of file snapshot. It can be persisted
+ * inside any database storage.
+ */
+export type FileSnapshot = {
+  key: string
+  name: string
+  contentLength: number
+  lastModified: string
+  etag: string
+  contentType?: string
+}
+
+/**
  * The interface every driver must implement.
  */
 export interface DriverContract {

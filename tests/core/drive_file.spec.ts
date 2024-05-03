@@ -260,3 +260,25 @@ test.group('Drive File | getSignedUrl', () => {
     }
   })
 })
+
+test.group('Drive File | toSnapshot', () => {
+  test('generate file snapshot', async ({ fs, assert }) => {
+    const key = 'hello.txt'
+    const contents = 'Hello world'
+
+    const fdfs = new FSDriver({ location: fs.baseUrl, visibility: 'public' })
+    await fdfs.put(key, contents)
+
+    const file = new DriveFile(key, fdfs)
+    const snapshot = await file.toSnapshot()
+
+    assert.match(snapshot.etag, /W/)
+    assert.isTrue(typeof snapshot.lastModified === 'string')
+    assert.containsSubset(snapshot, {
+      key: 'hello.txt',
+      name: 'hello.txt',
+      contentLength: 11,
+      contentType: 'text/plain',
+    })
+  })
+})

@@ -12,7 +12,13 @@ import { Readable } from 'node:stream'
 
 import * as errors from './errors.js'
 import { KeyNormalizer } from './key_normalizer.js'
-import type { DriverContract, ObjectMetaData, ObjectVisibility, SignedURLOptions } from './types.js'
+import type {
+  DriverContract,
+  FileSnapshot,
+  ObjectMetaData,
+  ObjectVisibility,
+  SignedURLOptions,
+} from './types.js'
 
 /**
  * DriveFile is a pointer to a given object. It can be used to lazily
@@ -150,6 +156,24 @@ export class DriveFile {
       return await this.#driver.getSignedUrl(this.key, options)
     } catch (error) {
       throw new errors.E_CANNOT_GENERATE_URL([this.key], { cause: error })
+    }
+  }
+
+  /**
+   * Returns a snapshot of the file. The snapshot could be persisted
+   * within any database storage and later you can create a file
+   * instance from it using the "disk.fromSnapshot" method.
+   */
+  async toSnapshot(): Promise<FileSnapshot> {
+    const metaData = await this.getMetaData()
+
+    return {
+      key: this.key,
+      name: this.name,
+      contentLength: metaData.contentLength,
+      lastModified: metaData.lastModified.toString(),
+      etag: metaData.etag,
+      contentType: metaData.contentType,
     }
   }
 }
