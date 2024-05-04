@@ -90,7 +90,7 @@ test.group('GCS Driver | visibility', (group) => {
     assert.equal(visibility, 'public')
   })
 
-  test('update visibility of a file', async ({ assert }) => {
+  test('make file private', async ({ assert }) => {
     const key = `${string.random(6)}.txt`
 
     const fdgcs = new GCSDriver({
@@ -101,10 +101,27 @@ test.group('GCS Driver | visibility', (group) => {
     })
 
     await fdgcs.put(key, 'hello world')
-    await fdgcs.setVisibility(key, 'private')
+    assert.equal(await fdgcs.getVisibility(key), 'public')
 
-    const visibility = await fdgcs.getVisibility(key)
-    assert.equal(visibility, 'private')
+    await fdgcs.setVisibility(key, 'private')
+    assert.equal(await fdgcs.getVisibility(key), 'private')
+  })
+
+  test('make file public', async ({ assert }) => {
+    const key = `${string.random(6)}.txt`
+
+    const fdgcs = new GCSDriver({
+      visibility: 'private',
+      bucket: GCS_FINE_GRAINED_ACL_BUCKET,
+      credentials: GCS_KEY,
+      usingUniformAcl: false,
+    })
+
+    await fdgcs.put(key, 'hello world')
+    assert.equal(await fdgcs.getVisibility(key), 'private')
+
+    await fdgcs.setVisibility(key, 'public')
+    assert.equal(await fdgcs.getVisibility(key), 'public')
   })
 
   test('throw error when trying to update visibility of a non-existing file', async ({

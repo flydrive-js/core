@@ -16,12 +16,12 @@ import { DriveFile } from './driver_file.js'
 import { KeyNormalizer } from './key_normalizer.js'
 import { DriveDirectory } from './drive_directory.js'
 import type {
-  DriverContract,
+  WriteOptions,
   FileSnapshot,
   ObjectMetaData,
+  DriverContract,
   ObjectVisibility,
   SignedURLOptions,
-  WriteOptions,
 } from './types.js'
 
 /**
@@ -241,6 +241,7 @@ export class Disk {
     paginationToken?: string
     objects: Iterable<DriveFile | DriveDirectory>
   }> {
+    prefix = this.#normalizer.normalize(prefix)
     return this.driver.listAll(prefix, options)
   }
 }
