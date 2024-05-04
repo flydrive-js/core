@@ -202,6 +202,24 @@ test.group('Drive File | getVisibility', () => {
     const visibility = await file.getVisibility()
     assert.equal(visibility, 'public')
   })
+
+  test('wrap driver errors to a generic error', async ({ fs, assert }) => {
+    const key = 'hello.txt'
+
+    const fdfs = new FSDriver({ location: fs.baseUrl, visibility: 'public' })
+    fdfs.getVisibility = function () {
+      throw new Error('Failed')
+    }
+
+    const file = new DriveFile(key, fdfs)
+    try {
+      await file.getVisibility()
+    } catch (error) {
+      assert.instanceOf(error, errors.E_CANNOT_GET_METADATA)
+      assert.equal(error.message, 'Unable to retrieve metadata of file at location "hello.txt"')
+      assert.match(error.cause.message, /Failed/)
+    }
+  })
 })
 
 test.group('Drive File | getUrl', () => {
