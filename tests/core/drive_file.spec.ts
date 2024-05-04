@@ -158,6 +158,38 @@ test.group('Drive File | getMetaData', () => {
   })
 })
 
+test.group('Drive File | exists', () => {
+  test('return true when file exists', async ({ fs, assert }) => {
+    const key = 'hello.txt'
+    const contents = 'Hello world'
+
+    const fdfs = new FSDriver({ location: fs.baseUrl, visibility: 'public' })
+    await fdfs.put(key, contents)
+
+    const file = new DriveFile(key, fdfs)
+    assert.isTrue(await file.exists())
+  })
+
+  test('wrap driver errors to a generic error', async ({ fs, assert }) => {
+    assert.plan(3)
+    const key = 'hello.txt'
+
+    const fdfs = new FSDriver({ location: fs.baseUrl, visibility: 'public' })
+    const file = new DriveFile(key, fdfs)
+    fdfs.exist = function () {
+      throw new Error('Failed')
+    }
+
+    try {
+      await file.exists()
+    } catch (error) {
+      assert.instanceOf(error, errors.E_CANNOT_CHECK_FILE_EXISTENCE)
+      assert.equal(error.message, 'Unable to check existence for file at location "hello.txt"')
+      assert.match(error.cause.message, /Failed/)
+    }
+  })
+})
+
 test.group('Drive File | getVisibility', () => {
   test('get file visibility', async ({ fs, assert }) => {
     const key = 'hello.txt'

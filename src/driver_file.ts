@@ -73,7 +73,7 @@ export class DriveFile {
     try {
       return await this.#driver.exist(this.key)
     } catch (error) {
-      throw new errors.E_CANNOT_CHECK_FILE_EXISTENCE([this.key])
+      throw new errors.E_CANNOT_CHECK_FILE_EXISTENCE([this.key], { cause: error })
     }
   }
 
