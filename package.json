@@ -59,6 +59,7 @@
     "@types/etag": "^1.8.3",
     "@types/mime-types": "^2.1.4",
     "@types/node": "^20.12.7",
+    "@types/sinon": "^17.0.3",
     "c8": "^9.1.0",
     "copyfiles": "^2.4.1",
     "cross-env": "^7.0.3",
@@ -67,6 +68,7 @@
     "get-stream": "^9.0.1",
     "np": "^10.0.0",
     "prettier": "^3.2.5",
+    "sinon": "^17.0.1",
     "ts-node": "^10.9.2",
     "tsup": "^8.0.2",
     "typescript": "^5.4.2"

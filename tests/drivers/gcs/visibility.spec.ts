@@ -100,7 +100,9 @@ test.group('GCS Driver | visibility', (group) => {
       usingUniformAcl: false,
     })
 
-    await fdgcs.put(key, 'hello world')
+    await fdgcs.put(key, 'hello world', {
+      cacheControl: 'no-cache',
+    })
     assert.equal(await fdgcs.getVisibility(key), 'public')
 
     await fdgcs.setVisibility(key, 'private')
@@ -117,7 +119,9 @@ test.group('GCS Driver | visibility', (group) => {
       usingUniformAcl: false,
     })
 
-    await fdgcs.put(key, 'hello world')
+    await fdgcs.put(key, 'hello world', {
+      cacheControl: 'no-cache',
+    })
     assert.equal(await fdgcs.getVisibility(key), 'private')
 
     await fdgcs.setVisibility(key, 'public')
