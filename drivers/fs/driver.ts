@@ -9,15 +9,14 @@
 
 import etag from 'etag'
 import mimeTypes from 'mime-types'
-import { existsSync, rmSync } from 'node:fs'
 import { Readable } from 'node:stream'
 import { slash } from '@poppinss/utils'
 import * as fsp from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
-import { createReadStream } from 'node:fs'
 import { Retrier } from '@humanwhocodes/retry'
 import { RuntimeException } from '@poppinss/utils'
 import { dirname, join, relative } from 'node:path'
+import { existsSync, rmSync, createReadStream } from 'node:fs'
 
 import debug from './debug.js'
 import type { FSDriverOptions } from './types.js'
@@ -348,7 +347,6 @@ export class FSDriver implements DriverContract {
     > {
       for (const file of files) {
         const relativeName = slash(
-          // @ts-expect-error "Dirent.parentPath" is the new property, but missing on types
           relative(self.#rootUrl, join(file.parentPath || file.path, file.name))
         )
         if (file.isFile()) {
