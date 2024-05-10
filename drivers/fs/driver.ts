@@ -9,6 +9,7 @@
 
 import etag from 'etag'
 import mimeTypes from 'mime-types'
+import { existsSync, rmSync } from 'node:fs'
 import { Readable } from 'node:stream'
 import { slash } from '@poppinss/utils'
 import * as fsp from 'node:fs/promises'
@@ -82,6 +83,15 @@ export class FSDriver implements DriverContract {
       await fsp.mkdir(dirname(location), { recursive: true })
       await fsp.writeFile(location, contents, options)
     })
+  }
+
+  /**
+   * Synchronously check if a file exists
+   */
+  existsSync(key: string): boolean {
+    debug('checking if file exists %s:%s', this.#rootUrl, key)
+    const location = join(this.#rootUrl, key)
+    return existsSync(location)
   }
 
   /**
@@ -293,6 +303,13 @@ export class FSDriver implements DriverContract {
     return this.#retrier.retry(async () => {
       return fsp.rm(location, { recursive: true, force: true })
     })
+  }
+
+  /**
+   * Synchronously delete all files from the root location
+   */
+  clearSync() {
+    rmSync(this.#rootUrl, { recursive: true, force: true })
   }
 
   /**

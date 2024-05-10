@@ -173,3 +173,45 @@ export interface DriverContract {
     objects: Iterable<DriveFile | DriveDirectory>
   }>
 }
+
+/**
+ * Configuration accepted by DriveManager
+ */
+export interface DriveManagerOptions<Services extends Record<string, () => DriverContract>> {
+  /**
+   * The default service to use for file system operations
+   */
+  default: keyof Services
+
+  /**
+   * Configured services
+   */
+  services: Services
+
+  /**
+   * Fakes configuration. Only needed when using fakes from the
+   * DriveManager
+   */
+  fakes?: {
+    /**
+     * The location for persisting files during fake mode
+     */
+    location: URL | string
+
+    /**
+     * Configure a custom URL builder for creating public and
+     * temporary URLs in fake mode
+     */
+    urlBuilder?: {
+      /**
+       * Custom implementation for creating public URLs
+       */
+      generateURL?(key: string, filePath: string): Promise<string>
+
+      /**
+       * Custom implementation for creating signed/temporary URLs
+       */
+      generateSignedURL?(key: string, filePath: string, options: SignedURLOptions): Promise<string>
+    }
+  }
+}
