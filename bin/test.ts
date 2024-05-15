@@ -14,6 +14,10 @@ configure({
       name: 'gcs',
       files: ['tests/drivers/gcs/*.spec.ts'],
     },
+    {
+      name: 's3',
+      files: ['tests/drivers/s3/*.spec.ts'],
+    },
   ],
   plugins: [assert(), fileSystem()],
 })
