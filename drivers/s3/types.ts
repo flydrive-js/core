@@ -24,6 +24,17 @@ type S3DriverBaseOptions = {
    * bucket.
    */
   visibility: ObjectVisibility
+
+  /**
+   * Does service supports ACL?
+   *
+   * When set to "false", the ACL related commands uses visibility
+   * defined within the config without any API call.
+   *
+   * Defaults to "true". However, when you are using Cloudflare R2, you
+   * must set it to "false".
+   */
+  supportsACL?: boolean
 }
 
 /**

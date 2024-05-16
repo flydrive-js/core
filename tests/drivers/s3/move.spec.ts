@@ -18,8 +18,9 @@ import {
   S3_ENDPOINT,
   AWS_ACCESS_KEY,
   AWS_ACCESS_SECRET,
-  deleteS3Objects,
-} from '../../helpers.js'
+  SUPPORTS_ACL,
+} from './env.js'
+import { deleteS3Objects } from '../../helpers.js'
 
 /**
  * Direct access to S3 client via their SDK
@@ -36,7 +37,7 @@ const client = new S3Client({
 test.group('S3 Driver | move', (group) => {
   group.each.setup(() => {
     return async () => {
-      await deleteS3Objects(client, '/')
+      await deleteS3Objects(client, S3_BUCKET, '/')
     }
   })
   group.each.timeout(10_000)
@@ -50,6 +51,7 @@ test.group('S3 Driver | move', (group) => {
       visibility: 'public',
       client: client,
       bucket: S3_BUCKET,
+      supportsACL: SUPPORTS_ACL,
     })
     await s3fs.put(source, contents)
     await s3fs.move(source, destination)
@@ -67,6 +69,7 @@ test.group('S3 Driver | move', (group) => {
       visibility: 'public',
       client: client,
       bucket: S3_BUCKET,
+      supportsACL: SUPPORTS_ACL,
     })
     await s3fs.put(source, contents)
     await s3fs.move(source, destination)
@@ -83,13 +86,14 @@ test.group('S3 Driver | move', (group) => {
       visibility: 'public',
       client: client,
       bucket: S3_BUCKET,
+      supportsACL: SUPPORTS_ACL,
     })
     await assert.rejects(async () => {
       await s3fs.move(source, destination)
-    }, /UnknownError/)
+    }, /UnknownError|The specified key does not exist/)
   })
 
-  test('retain source file visibility and metadata during move', async ({ assert }) => {
+  test('retain source file metadata during move', async ({ assert }) => {
     const source = `${string.random(10)}.txt`
     const destination = `${string.random(10)}.txt`
     const contents = 'Hello world'
@@ -98,6 +102,29 @@ test.group('S3 Driver | move', (group) => {
       visibility: 'public',
       client: client,
       bucket: S3_BUCKET,
+      supportsACL: SUPPORTS_ACL,
+    })
+
+    await s3fs.put(source, contents, {
+      contentType: 'image/png',
+    })
+    await s3fs.move(source, destination)
+
+    const metaData = await s3fs.getMetaData(destination)
+    assert.equal(metaData.contentType, 'image/png')
+    assert.isFalse(await s3fs.exist(source))
+  })
+
+  test('retain source file visibility during move', async ({ assert }) => {
+    const source = `${string.random(10)}.txt`
+    const destination = `${string.random(10)}.txt`
+    const contents = 'Hello world'
+
+    const s3fs = new S3Driver({
+      visibility: 'public',
+      client: client,
+      bucket: S3_BUCKET,
+      supportsACL: SUPPORTS_ACL,
     })
 
     await s3fs.put(source, contents, {
@@ -106,12 +133,9 @@ test.group('S3 Driver | move', (group) => {
     })
     await s3fs.move(source, destination)
 
-    const metaData = await s3fs.getMetaData(destination)
     const visibility = await s3fs.getVisibility(destination)
 
     assert.equal(visibility, 'private')
-    assert.equal(metaData.contentType, 'image/png')
-
     assert.isFalse(await s3fs.exist(source))
-  })
+  }).skip(!SUPPORTS_ACL, 'Service does not support ACL. Hence, we cannot control file visibility')
 })

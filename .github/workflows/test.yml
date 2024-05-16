@@ -68,3 +68,55 @@ jobs:
           GCS_KEY: ${{ secrets.GCS_KEY }}
           GCS_BUCKET: drive-gcs
           GCS_FINE_GRAINED_ACL_BUCKET: drive-gcs-no-uniform-acl
+  tests-s3:
+    runs-on: ${{ matrix.os }}
+    concurrency:
+      group: s3
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        node-version:
+          - 21.x
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: Install
+        run: npm install
+      - name: Run tests
+        run: npm test s3
+        env:
+          S3_SERVICE: do
+          S3_BUCKET: testing-flydrive
+          S3_ACCESS_KEY: ${{ secrets.DO_ACCESS_KEY }}
+          S3_ACCESS_SECRET: ${{ secrets.DO_ACCESS_SECRET }}
+          S3_ENDPOINT: https://sgp1.digitaloceanspaces.com
+          S3_REGION: sgp1
+  tests-r2:
+    runs-on: ${{ matrix.os }}
+    concurrency:
+      group: s3
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        node-version:
+          - 21.x
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: Install
+        run: npm install
+      - name: Run tests
+        run: npm test s3
+        env:
+          S3_SERVICE: r2
+          S3_BUCKET: testing-flydrive
+          S3_ACCESS_KEY: ${{ secrets.R2_ACCESS_KEY }}
+          S3_ACCESS_SECRET: ${{ secrets.R2_ACCESS_SECRET }}
+          S3_ENDPOINT: https://b7d56a259a224b185a70dd6e6f77d9c3.r2.cloudflarestorage.com
+          S3_REGION: auto

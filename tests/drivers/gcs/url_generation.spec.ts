@@ -11,7 +11,7 @@ import { test } from '@japa/runner'
 import string from '@poppinss/utils/string'
 import { Storage } from '@google-cloud/storage'
 import { GCSDriver } from '../../../drivers/gcs/driver.js'
-import { GCS_BUCKET, GCS_FINE_GRAINED_ACL_BUCKET, GCS_KEY } from '../../helpers.js'
+import { GCS_BUCKET, GCS_FINE_GRAINED_ACL_BUCKET, GCS_KEY } from './env.js'
 
 /**
  * Direct access to Google cloud storage bucket

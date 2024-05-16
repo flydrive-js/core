@@ -18,8 +18,9 @@ import {
   S3_ENDPOINT,
   AWS_ACCESS_KEY,
   AWS_ACCESS_SECRET,
-  deleteS3Objects,
-} from '../../helpers.js'
+  SUPPORTS_ACL,
+} from './env.js'
+import { deleteS3Objects } from '../../helpers.js'
 
 /**
  * Direct access to S3 client via their SDK
@@ -36,7 +37,7 @@ const client = new S3Client({
 test.group('S3 Driver | visibility', (group) => {
   group.each.setup(() => {
     return async () => {
-      await deleteS3Objects(client, '/')
+      await deleteS3Objects(client, S3_BUCKET, '/')
     }
   })
   group.each.timeout(10_000)
@@ -48,6 +49,7 @@ test.group('S3 Driver | visibility', (group) => {
       visibility: 'public',
       client: client,
       bucket: S3_BUCKET,
+      supportsACL: SUPPORTS_ACL,
     })
 
     await s3fs.put(key, 'hello world')
@@ -63,6 +65,7 @@ test.group('S3 Driver | visibility', (group) => {
       visibility: 'public',
       client: client,
       bucket: S3_BUCKET,
+      supportsACL: SUPPORTS_ACL,
     })
 
     await s3fs.put(key, 'hello world', {
@@ -71,7 +74,16 @@ test.group('S3 Driver | visibility', (group) => {
     assert.equal(await s3fs.getVisibility(key), 'public')
 
     await s3fs.setVisibility(key, 'private')
-    assert.equal(await s3fs.getVisibility(key), 'private')
+
+    /**
+     * The file visibility won't change when service does not
+     * support ACL
+     */
+    if (SUPPORTS_ACL) {
+      assert.equal(await s3fs.getVisibility(key), 'private')
+    } else {
+      assert.equal(await s3fs.getVisibility(key), 'public')
+    }
   })
 
   test('make file public', async ({ assert }) => {
@@ -81,6 +93,7 @@ test.group('S3 Driver | visibility', (group) => {
       visibility: 'private',
       client: client,
       bucket: S3_BUCKET,
+      supportsACL: SUPPORTS_ACL,
     })
 
     await s3fs.put(key, 'hello world', {
@@ -89,7 +102,16 @@ test.group('S3 Driver | visibility', (group) => {
     assert.equal(await s3fs.getVisibility(key), 'private')
 
     await s3fs.setVisibility(key, 'public')
-    assert.equal(await s3fs.getVisibility(key), 'public')
+
+    /**
+     * The file visibility won't change when service does not
+     * support ACL
+     */
+    if (SUPPORTS_ACL) {
+      assert.equal(await s3fs.getVisibility(key), 'public')
+    } else {
+      assert.equal(await s3fs.getVisibility(key), 'private')
+    }
   })
 
   test('throw error when trying to update visibility of a non-existing file', async ({
@@ -101,10 +123,11 @@ test.group('S3 Driver | visibility', (group) => {
       visibility: 'public',
       client: client,
       bucket: S3_BUCKET,
+      supportsACL: SUPPORTS_ACL,
     })
 
     await assert.rejects(async () => {
       await s3fs.setVisibility(key, 'public')
     }, /UnknownError/)
-  })
+  }).skip(!SUPPORTS_ACL, 'Service does not support ACL. Hence, we cannot control file visibility')
 })

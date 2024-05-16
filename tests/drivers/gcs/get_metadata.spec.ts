@@ -10,7 +10,7 @@
 import { test } from '@japa/runner'
 import string from '@poppinss/utils/string'
 import { Storage } from '@google-cloud/storage'
-import { GCS_BUCKET, GCS_KEY } from '../../helpers.js'
+import { GCS_BUCKET, GCS_KEY } from './env.js'
 import { GCSDriver } from '../../../drivers/gcs/driver.js'
 
 /**

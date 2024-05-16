@@ -18,8 +18,9 @@ import {
   S3_ENDPOINT,
   AWS_ACCESS_KEY,
   AWS_ACCESS_SECRET,
-  deleteS3Objects,
-} from '../../helpers.js'
+  SUPPORTS_ACL,
+} from './env.js'
+import { deleteS3Objects } from '../../helpers.js'
 
 /**
  * Direct access to S3 client via their SDK
@@ -36,7 +37,7 @@ const client = new S3Client({
 test.group('S3 Driver | exists', (group) => {
   group.each.setup(() => {
     return async () => {
-      await deleteS3Objects(client, '/')
+      await deleteS3Objects(client, S3_BUCKET, '/')
     }
   })
   group.each.timeout(10_000)
@@ -49,6 +50,7 @@ test.group('S3 Driver | exists', (group) => {
       visibility: 'public',
       client: client,
       bucket: S3_BUCKET,
+      supportsACL: SUPPORTS_ACL,
     })
     await s3fs.put(key, contents)
 
@@ -62,6 +64,7 @@ test.group('S3 Driver | exists', (group) => {
       visibility: 'public',
       client: client,
       bucket: S3_BUCKET,
+      supportsACL: SUPPORTS_ACL,
     })
 
     assert.isFalse(await s3fs.exist(key))
@@ -75,6 +78,7 @@ test.group('S3 Driver | exists', (group) => {
       visibility: 'public',
       client: client,
       bucket: S3_BUCKET,
+      supportsACL: SUPPORTS_ACL,
     })
 
     await s3fs.put(key, contents)

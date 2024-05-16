@@ -44,6 +44,7 @@ import type {
  */
 export class S3Driver implements DriverContract {
   #client: S3Client
+  #supportsACL: boolean = true
 
   /**
    * The URI that holds permission for public
@@ -52,6 +53,9 @@ export class S3Driver implements DriverContract {
 
   constructor(public options: S3DriverOptions) {
     this.#client = 'client' in options ? options.client : new S3Client(options)
+    if (options.supportsACL !== undefined) {
+      this.#supportsACL = options.supportsACL
+    }
 
     if (debug.enabled) {
       debug('driver config %O', {
@@ -99,11 +103,17 @@ export class S3Driver implements DriverContract {
     /**
      * Creating S3 options with all the known and unknown properties
      */
-    const isPublic = (visibility || this.options.visibility) === 'public'
     const s3Options: Omit<PutObjectCommandInput, 'Key'> = {
       Bucket: this.options.bucket,
-      ACL: isPublic ? 'public-read' : 'private',
       ...rest,
+    }
+
+    /**
+     * Set ACL when service supports it
+     */
+    if (this.#supportsACL) {
+      const isPublic = (visibility || this.options.visibility) === 'public'
+      s3Options.ACL = isPublic ? 'public-read' : 'private'
     }
 
     if (contentType) {
@@ -281,6 +291,10 @@ export class S3Driver implements DriverContract {
    * Returns the visibility of a file
    */
   async getVisibility(key: string): Promise<ObjectVisibility> {
+    if (!this.#supportsACL) {
+      return this.options.visibility
+    }
+
     debug('fetching file visibility %s:%s', this.options.bucket, key)
     const response = await this.#client.send(
       this.createGetObjectAclCommand(this.#client, {
@@ -303,6 +317,10 @@ export class S3Driver implements DriverContract {
    * Updates the visibility of a file
    */
   async setVisibility(key: string, visibility: ObjectVisibility): Promise<void> {
+    if (!this.#supportsACL) {
+      return
+    }
+
     debug('updating file visibility %s:%s to %s', this.options.bucket, key, visibility)
     await this.#client.send(
       this.createPutObjectAclCommand(this.#client, {
@@ -335,20 +353,30 @@ export class S3Driver implements DriverContract {
   /**
    * Writes a file to the bucket for the given key and stream
    */
-  async putStream(
-    key: string,
-    contents: Readable,
-    options?: WriteOptions | undefined
-  ): Promise<void> {
+  putStream(key: string, contents: Readable, options?: WriteOptions | undefined): Promise<void> {
     debug('creating/updating file %s:%s', this.options.bucket, key)
 
-    const command = this.createPutObjectCommand(this.#client, {
-      ...this.#getSaveOptions(key, options),
-      Key: key,
-      Body: contents,
-    })
+    return new Promise((resolve, reject) => {
+      /**
+       * GCS internally creates a pipeline of stream and invokes the "_destroy" method
+       * at several occassions. Because of that, the "_destroy" method emits an event
+       * which cannot handled within this block of code.
+       *
+       * So the only way I have been able to make GCS streams work is by ditching the
+       * pipeline method and relying on the "pipe" method instead.
+       */
+      contents.once('error', reject)
+      const command = this.createPutObjectCommand(this.#client, {
+        ...this.#getSaveOptions(key, options),
+        Key: key,
+        Body: contents,
+      })
 
-    await this.#client.send(command)
+      return this.#client
+        .send(command)
+        .then(() => resolve())
+        .catch(reject)
+    })
   }
 
   /**
@@ -371,7 +399,7 @@ export class S3Driver implements DriverContract {
      * destination when no inline visibility is
      * defined
      */
-    if (!options.visibility) {
+    if (!options.visibility && this.#supportsACL) {
       options.visibility = await this.getVisibility(source)
     }
 
