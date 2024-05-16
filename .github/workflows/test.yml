@@ -97,7 +97,7 @@ jobs:
   tests-r2:
     runs-on: ${{ matrix.os }}
     concurrency:
-      group: s3
+      group: r2
     strategy:
       matrix:
         os: [ubuntu-latest]
