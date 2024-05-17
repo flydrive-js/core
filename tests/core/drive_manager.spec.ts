@@ -10,11 +10,11 @@
 import { test } from '@japa/runner'
 
 import { Disk } from '../../src/disk.js'
-import { GCS_BUCKET, GCS_KEY } from '../helpers.js'
+import { FakeDisk } from '../../src/fake_disk.js'
 import { FSDriver } from '../../drivers/fs/driver.js'
 import { GCSDriver } from '../../drivers/gcs/driver.js'
 import { DriveManager } from '../../src/drive_manager.js'
-import { FakeDisk } from '../../src/fake_disk.js'
+import { GCS_BUCKET, GCS_KEY } from '../drivers/gcs/env.js'
 
 test.group('Drive Manager', () => {
   test('create disk instances for configured services', ({ fs, assert }) => {
