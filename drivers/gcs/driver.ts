@@ -155,7 +155,7 @@ export class GCSDriver implements DriverContract {
    * Returns a boolean indicating if the file exists
    * or not.
    */
-  async exist(key: string): Promise<boolean> {
+  async exists(key: string): Promise<boolean> {
     debug('checking if file exists %s:%s', this.options.bucket, key)
     const bucket = this.#storage.bucket(this.options.bucket)
 
@@ -426,6 +426,8 @@ export class GCSDriver implements DriverContract {
     if (prefix) {
       prefix = !recursive ? `${prefix.replace(/\/$/, '')}/` : prefix
     }
+
+    debug('listing all files matching prefix %s:%s', this.options.bucket, prefix)
 
     const response = await this.#getGCSObjects({
       autoPaginate: false,

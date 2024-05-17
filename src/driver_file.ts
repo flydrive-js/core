@@ -71,7 +71,7 @@ export class DriveFile {
    */
   async exists() {
     try {
-      return await this.#driver.exist(this.key)
+      return await this.#driver.exists(this.key)
     } catch (error) {
       throw new errors.E_CANNOT_CHECK_FILE_EXISTENCE([this.key], { cause: error })
     }

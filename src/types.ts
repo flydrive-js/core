@@ -73,7 +73,7 @@ export interface DriverContract {
   /**
    * Return a boolean indicating if the file exists
    */
-  exist(key: string): Promise<boolean>
+  exists(key: string): Promise<boolean>
 
   /**
    * Return contents of a object for the given key as a UTF-8 string.

@@ -182,7 +182,7 @@ test.group('Disk | exists', () => {
 
     const fdfs = new FSDriver({ location: fs.baseUrl, visibility: 'public' })
     const disk = new Disk(fdfs)
-    fdfs.exist = function () {
+    fdfs.exists = function () {
       throw new Error('Failed')
     }
 

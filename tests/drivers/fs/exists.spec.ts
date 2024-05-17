@@ -18,14 +18,14 @@ test.group('FS Driver | exists', () => {
     const fdfs = new FSDriver({ location: fs.baseUrl, visibility: 'public' })
     await fdfs.put(key, contents)
 
-    assert.isTrue(await fdfs.exist(key))
+    assert.isTrue(await fdfs.exists(key))
   })
 
   test('return false when file does not exist', async ({ fs, assert }) => {
     const key = 'hello.txt'
     const fdfs = new FSDriver({ location: fs.baseUrl, visibility: 'public' })
 
-    assert.isFalse(await fdfs.exist(key))
+    assert.isFalse(await fdfs.exists(key))
   })
 
   test('return false when object is a folder', async ({ fs, assert }) => {
@@ -35,6 +35,6 @@ test.group('FS Driver | exists', () => {
     const fdfs = new FSDriver({ location: fs.baseUrl, visibility: 'public' })
     await fdfs.put(key, contents)
 
-    assert.isFalse(await fdfs.exist('foo'))
+    assert.isFalse(await fdfs.exists('foo'))
   })
 })

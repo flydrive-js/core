@@ -96,7 +96,7 @@ export class FSDriver implements DriverContract {
   /**
    * Returns a boolean indicating if the file exists or not.
    */
-  async exist(key: string): Promise<boolean> {
+  async exists(key: string): Promise<boolean> {
     debug('checking if file exists %s:%s', this.#rootUrl, key)
     const location = join(this.#rootUrl, key)
     try {

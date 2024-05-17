@@ -111,7 +111,7 @@ test.group('S3 Driver | copy', (group) => {
     const metaData = await s3fs.getMetaData(destination)
     assert.equal(metaData.contentType, 'image/png')
 
-    assert.isTrue(await s3fs.exist(source))
+    assert.isTrue(await s3fs.exists(source))
   })
 
   test('retain source file visibility during copy', async ({ assert }) => {
@@ -134,6 +134,6 @@ test.group('S3 Driver | copy', (group) => {
     await s3fs.copy(source, destination)
     assert.equal(await s3fs.getMetaData(destination), 'private')
 
-    assert.isTrue(await s3fs.exist(source))
+    assert.isTrue(await s3fs.exists(source))
   }).skip(!SUPPORTS_ACL, 'Service does not support ACL. Hence, we cannot control file visibility')
 })

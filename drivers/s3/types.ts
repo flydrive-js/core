@@ -7,7 +7,7 @@
  * file that was distributed with this source code.
  */
 
-import type { S3Client, S3ClientConfig } from '@aws-sdk/client-s3'
+import type { GetObjectAclCommandInput, S3Client, S3ClientConfig } from '@aws-sdk/client-s3'
 import type { ObjectVisibility } from '../../src/types.js'
 
 /**
@@ -35,6 +35,32 @@ type S3DriverBaseOptions = {
    * must set it to "false".
    */
   supportsACL?: boolean
+
+  /**
+   * An optional CDN URL to use for public URLs. Otherwise the endpoint
+   * will be used
+   */
+  cdnUrl?: string
+
+  /**
+   * Configure a custom URL builder for creating public and
+   * temporary URLs
+   */
+  urlBuilder?: {
+    /**
+     * Custom implementation for creating public URLs
+     */
+    generateURL?(key: string, bucket: string, client: S3Client): Promise<string>
+
+    /**
+     * Custom implementation for creating signed/temporary URLs
+     */
+    generateSignedURL?(
+      key: string,
+      options: GetObjectAclCommandInput,
+      client: S3Client
+    ): Promise<string>
+  }
 }
 
 /**

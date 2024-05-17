@@ -54,7 +54,7 @@ test.group('S3 Driver | exists', (group) => {
     })
     await s3fs.put(key, contents)
 
-    assert.isTrue(await s3fs.exist(key))
+    assert.isTrue(await s3fs.exists(key))
   })
 
   test('return false when file does not exist', async ({ assert }) => {
@@ -67,7 +67,7 @@ test.group('S3 Driver | exists', (group) => {
       supportsACL: SUPPORTS_ACL,
     })
 
-    assert.isFalse(await s3fs.exist(key))
+    assert.isFalse(await s3fs.exists(key))
   })
 
   test('return false when object is a folder', async ({ assert }) => {
@@ -83,6 +83,6 @@ test.group('S3 Driver | exists', (group) => {
 
     await s3fs.put(key, contents)
 
-    assert.isFalse(await s3fs.exist('foo'))
+    assert.isFalse(await s3fs.exists('foo'))
   })
 })

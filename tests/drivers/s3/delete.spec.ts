@@ -55,7 +55,7 @@ test.group('S3 Driver | delete', (group) => {
     await s3fs.put(key, contents)
     await s3fs.delete(key)
 
-    assert.isFalse(await s3fs.exist(key))
+    assert.isFalse(await s3fs.exists(key))
   })
 
   test('delete file at nested path', async ({ assert }) => {
@@ -71,7 +71,7 @@ test.group('S3 Driver | delete', (group) => {
     await s3fs.put(key, contents)
     await s3fs.delete(key)
 
-    assert.isFalse(await s3fs.exist(key))
+    assert.isFalse(await s3fs.exists(key))
   })
 
   test('noop when trying to delete a non-existing file', async ({ assert }) => {
@@ -84,7 +84,7 @@ test.group('S3 Driver | delete', (group) => {
     })
     await s3fs.delete(key)
 
-    assert.isFalse(await s3fs.exist(key))
+    assert.isFalse(await s3fs.exists(key))
   })
 
   test('noop when trying to delete a directory', async ({ assert }) => {
@@ -104,72 +104,75 @@ test.group('S3 Driver | delete', (group) => {
      * S3 consider it as a 404 call and hence no error is raised
      */
     await s3fs.delete('foo/')
-    assert.isTrue(await s3fs.exist(key))
+    assert.isTrue(await s3fs.exists(key))
   })
 })
 
-// test.group('S3 Driver | deleteAll', (group) => {
-//   group.each.setup(() => {
-//     return async () => {
-//       await bucket.deleteFiles()
-//     }
-//   })
-//   group.each.timeout(10_000)
+test.group('S3 Driver | deleteAll', (group) => {
+  group.each.setup(() => {
+    return async () => {
+      await deleteS3Objects(client, S3_BUCKET, '/')
+    }
+  })
+  group.each.timeout(10_000)
 
-//   test('delete all files matching the prefix', async ({ assert }) => {
-//     const key = `foo/${string.random(6)}.txt`
-//     const anotherKey = `${string.random(6)}.txt`
-//     const contents = 'Hello world'
+  test('delete all files matching the prefix', async ({ assert }) => {
+    const key = `foo/${string.random(6)}.txt`
+    const anotherKey = `${string.random(6)}.txt`
+    const contents = 'Hello world'
 
-//     const s3fs = new S3Driver({
-//       visibility: 'public',
-//       client: client,
-//       bucket: S3_BUCKET,
-//     })
+    const s3fs = new S3Driver({
+      visibility: 'public',
+      client: client,
+      bucket: S3_BUCKET,
+      supportsACL: SUPPORTS_ACL,
+    })
 
-//     await s3fs.put(key, contents)
-//     await s3fs.put(anotherKey, contents)
+    await s3fs.put(key, contents)
+    await s3fs.put(anotherKey, contents)
 
-//     await s3fs.deleteAll('foo')
-//     assert.deepEqual(await bucket.file(key).exists(), [false])
-//     assert.deepEqual(await bucket.file(anotherKey).exists(), [true])
-//   })
+    await s3fs.deleteAll('foo')
+    assert.equal(await s3fs.exists(key), false)
+    assert.equal(await s3fs.exists(anotherKey), true)
+  })
 
-//   test('delete empty folders', async ({ assert }) => {
-//     const key = `foo/${string.random(6)}.txt`
-//     const anotherKey = `foo/bar/${string.random(6)}.txt}`
-//     const contents = 'Hello world'
+  test('delete empty folders', async ({ assert }) => {
+    const key = `foo/${string.random(6)}.txt`
+    const anotherKey = `foo/bar/${string.random(6)}.txt}`
+    const contents = 'Hello world'
 
-//     const s3fs = new S3Driver({
-//       visibility: 'public',
-//       client: client,
-//       bucket: S3_BUCKET,
-//     })
-//     await s3fs.put(key, contents)
-//     await s3fs.put(anotherKey, contents)
-//     await s3fs.delete(anotherKey)
+    const s3fs = new S3Driver({
+      visibility: 'public',
+      client: client,
+      bucket: S3_BUCKET,
+      supportsACL: SUPPORTS_ACL,
+    })
+    await s3fs.put(key, contents)
+    await s3fs.put(anotherKey, contents)
+    await s3fs.delete(anotherKey)
 
-//     /**
-//      * Since we have deleted the "foo/bar/hello.txt" file. The
-//      * "bar" directory will return an empty array of files
-//      */
-//     const files = await bucket.getFiles({ prefix: 'foo/bar/' })
-//     assert.lengthOf(files[0], 0)
+    /**
+     * Since we have deleted the "foo/bar/hello.txt" file. The
+     * "bar" directory will return an empty array of files
+     */
+    const files = await s3fs.listAll('foo/bar/')
+    assert.lengthOf(Array.from(files.objects), 0)
 
-//     /**
-//      * Now we have deletes all the files within the bucket.
-//      */
-//     await s3fs.deleteAll('foo')
-//     const allFiles = await bucket.getFiles()
-//     assert.lengthOf(allFiles[0], 0)
-//   })
+    /**
+     * Now we have deletes all the files within the bucket.
+     */
+    await s3fs.deleteAll('foo')
+    const allFiles = await s3fs.listAll('/')
+    assert.lengthOf(Array.from(allFiles.objects), 0)
+  })
 
-//   test('noop when trying to delete non-existing prefixes', async () => {
-//     const s3fs = new S3Driver({
-//       visibility: 'public',
-//       client: client,
-//       bucket: S3_BUCKET,
-//     })
-//     await s3fs.deleteAll('foo')
-//   })
-// })
+  test('noop when trying to delete non-existing prefixes', async () => {
+    const s3fs = new S3Driver({
+      visibility: 'public',
+      client: client,
+      bucket: S3_BUCKET,
+      supportsACL: SUPPORTS_ACL,
+    })
+    await s3fs.deleteAll('foo')
+  })
+})

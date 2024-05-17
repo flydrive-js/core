@@ -57,7 +57,7 @@ test.group('S3 Driver | move', (group) => {
     await s3fs.move(source, destination)
 
     assert.equal(await s3fs.get(destination), contents)
-    assert.isFalse(await s3fs.exist(source))
+    assert.isFalse(await s3fs.exists(source))
   })
 
   test('move file from source to a nested directory', async ({ assert }) => {
@@ -75,7 +75,7 @@ test.group('S3 Driver | move', (group) => {
     await s3fs.move(source, destination)
 
     assert.equal(await s3fs.get(destination), contents)
-    assert.isFalse(await s3fs.exist(source))
+    assert.isFalse(await s3fs.exists(source))
   })
 
   test('return error when source file does not exist', async ({ assert }) => {
@@ -112,7 +112,7 @@ test.group('S3 Driver | move', (group) => {
 
     const metaData = await s3fs.getMetaData(destination)
     assert.equal(metaData.contentType, 'image/png')
-    assert.isFalse(await s3fs.exist(source))
+    assert.isFalse(await s3fs.exists(source))
   })
 
   test('retain source file visibility during move', async ({ assert }) => {
@@ -136,6 +136,6 @@ test.group('S3 Driver | move', (group) => {
     const visibility = await s3fs.getVisibility(destination)
 
     assert.equal(visibility, 'private')
-    assert.isFalse(await s3fs.exist(source))
+    assert.isFalse(await s3fs.exists(source))
   }).skip(!SUPPORTS_ACL, 'Service does not support ACL. Hence, we cannot control file visibility')
 })

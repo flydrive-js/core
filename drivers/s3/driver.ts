@@ -9,6 +9,7 @@
 
 import mimeTypes from 'mime-types'
 import { Readable } from 'node:stream'
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 import {
   S3Client,
   PutObjectCommand,
@@ -19,6 +20,8 @@ import {
   PutObjectAclCommand,
   DeleteObjectCommand,
   GetObjectAclCommand,
+  ListObjectsV2Command,
+  DeleteObjectsCommand,
   PutObjectCommandInput,
   GetObjectCommandInput,
   CopyObjectCommandInput,
@@ -26,16 +29,22 @@ import {
   GetObjectAclCommandInput,
   PutObjectAclCommandInput,
   DeleteObjectCommandInput,
+  ListObjectsV2CommandInput,
+  DeleteObjectsCommandInput,
 } from '@aws-sdk/client-s3'
 
 import debug from './debug.js'
 import { S3DriverOptions } from './types.js'
+import { DriveFile } from '../../src/driver_file.js'
+import { DriveDirectory } from '../../src/drive_directory.js'
 import type {
   WriteOptions,
   DriverContract,
   ObjectMetaData,
   ObjectVisibility,
+  SignedURLOptions,
 } from '../../src/types.js'
+import string from '@poppinss/utils/string'
 
 /**
  * Implementation of FlyDrive driver that reads and persists files
@@ -147,6 +156,51 @@ export class S3Driver implements DriverContract {
   }
 
   /**
+   * Deletes files recursively with a batch of 1000 files at a time
+   */
+  async #deleteFilesRecursively(prefix: string, paginationToken?: string) {
+    /**
+     * Get a list of 1000 files
+     */
+    const response = await this.#client.send(
+      this.createListObjectsV2Command(this.#client, {
+        Bucket: this.options.bucket,
+        ContinuationToken: paginationToken,
+        ...(prefix !== '/' ? { Prefix: prefix } : {}),
+      })
+    )
+
+    /**
+     * Return early if no files exists
+     */
+    if (!response.Contents) {
+      return
+    }
+
+    /**
+     * Delete all files
+     */
+    await this.#client.send(
+      this.createDeleteObjectsCommand(this.#client, {
+        Bucket: this.options.bucket,
+        Delete: {
+          Objects: Array.from(response.Contents).map((file) => {
+            return {
+              Key: file.Key,
+            }
+          }),
+          Quiet: true,
+        },
+      })
+    )
+
+    if (response.NextContinuationToken) {
+      debug('deleting next batch of files with token %s', response.NextContinuationToken)
+      await this.#deleteFilesRecursively(prefix, response.NextContinuationToken)
+    }
+  }
+
+  /**
    * Creates S3 "PutObjectCommand". Feel free to override this method to
    * manually create the command
    */
@@ -203,10 +257,26 @@ export class S3Driver implements DriverContract {
   }
 
   /**
+   * Creates S3 "ListObjectsV2Command". Feel free to override this method to
+   * manually create the command
+   */
+  protected createListObjectsV2Command(_: S3Client, options: ListObjectsV2CommandInput) {
+    return new ListObjectsV2Command(options)
+  }
+
+  /**
+   * Creates S3 "DeleteObjectsCommand". Feel free to override this method to
+   * manually create the command
+   */
+  protected createDeleteObjectsCommand(_: S3Client, options: DeleteObjectsCommandInput) {
+    return new DeleteObjectsCommand(options)
+  }
+
+  /**
    * Returns a boolean indicating if the file exists
    * or not.
    */
-  async exist(key: string): Promise<boolean> {
+  async exists(key: string): Promise<boolean> {
     debug('checking if file exists %s:%s', this.options.bucket, key)
     try {
       const response = await this.#client.send(
@@ -311,6 +381,86 @@ export class S3Driver implements DriverContract {
     })
 
     return isPublic ? 'public' : 'private'
+  }
+
+  /**
+   * Returns the public URL of the file. This method does not check
+   * if the file exists or not.
+   */
+  async getUrl(key: string): Promise<string> {
+    /**
+     * Use custom implementation when exists.
+     */
+    const generateURL = this.options.urlBuilder?.generateURL
+    if (generateURL) {
+      debug('using custom implementation for generating public URL %s:%s', this.options.bucket, key)
+      return generateURL(key, this.options.bucket, this.#client)
+    }
+
+    debug('generating file URL %s:%s', this.options.bucket, key)
+
+    /**
+     * Make sure using CDN URL property
+     */
+    if (this.options.cdnUrl) {
+      return new URL(`/${this.options.bucket}/${key}`, this.options.cdnUrl).toString()
+    }
+
+    /**
+     * Use endpoint from the config (when available)
+     */
+    if (this.#client.config.endpoint) {
+      const endpoint = await this.#client.config.endpoint()
+      return new URL(
+        `/${this.options.bucket}/${key}`,
+        `${endpoint.protocol}//${endpoint.hostname}`
+      ).toString()
+    }
+
+    /**
+     * Otherwise fallback to AWS based URL
+     */
+    return new URL(`/${key}`, `https://${this.options.bucket}.s3.amazonaws.com`).toString()
+  }
+
+  /**
+   * Returns the signed/temporary URL of the file. By default, the signed URLs
+   * expire in 30mins, but a custom expiry can be defined using
+   * "options.expiresIn" property.
+   */
+  async getSignedUrl(key: string, options?: SignedURLOptions): Promise<string> {
+    const { contentDisposition, contentType, expiresIn, ...rest } = Object.assign({}, options)
+
+    /**
+     * Options passed to GCS when generating the signed URL.
+     */
+    const expires = string.seconds.parse(expiresIn || '30mins')
+
+    /**
+     * Options given to the GetObjectCommand when create a signed
+     * URL
+     */
+    const signedURLOptions: GetObjectCommandInput = {
+      Key: key,
+      Bucket: this.options.bucket,
+      ResponseContentType: contentType,
+      ResponseContentDisposition: contentDisposition,
+      ...rest,
+    }
+
+    /**
+     * Use custom implementation when exists.
+     */
+    const generateSignedURL = this.options.urlBuilder?.generateSignedURL
+    if (generateSignedURL) {
+      debug('using custom implementation for generating signed URL %s:%s', this.options.bucket, key)
+      return generateSignedURL(key, signedURLOptions, this.#client)
+    }
+
+    debug('generating signed URL %s:%s', this.options.bucket, key)
+    return getSignedUrl(this.#client, this.createGetObjectCommand(this.#client, signedURLOptions), {
+      expiresIn: expires,
+    })
   }
 
   /**
@@ -442,5 +592,74 @@ export class S3Driver implements DriverContract {
         Bucket: this.options.bucket,
       })
     )
+  }
+
+  /**
+   * Deletes the files and directories matching the provided
+   * prefix.
+   */
+  async deleteAll(prefix: string): Promise<void> {
+    debug('removing all files matching prefix %s:%s', this.options.bucket, prefix)
+    await this.#deleteFilesRecursively(prefix)
+  }
+
+  /**
+   * Returns a list of files. The pagination token can be used to paginate
+   * through the files.
+   */
+  async listAll(
+    prefix: string,
+    options?: {
+      recursive?: boolean
+      paginationToken?: string
+      maxResults?: number
+    }
+  ): Promise<{
+    paginationToken?: string
+    objects: Iterable<DriveFile | DriveDirectory>
+  }> {
+    const self = this
+    let { recursive, paginationToken, maxResults } = Object.assign({ recursive: false }, options)
+    if (prefix) {
+      prefix = !recursive ? `${prefix.replace(/\/$/, '')}/` : prefix
+    }
+
+    debug('listing all files matching prefix %s:%s', this.options.bucket, prefix)
+
+    const response = await this.#client.send(
+      this.createListObjectsV2Command(this.#client, {
+        Bucket: this.options.bucket,
+        Delimiter: !recursive ? '/' : '',
+        ContinuationToken: paginationToken,
+        ...(prefix !== '/' ? { Prefix: prefix } : {}),
+        ...(maxResults !== undefined ? { MaxKeys: maxResults } : {}),
+      })
+    )
+
+    /**
+     * The generator is used to lazily iterate over files and
+     * convert them into DriveFile or DriveDirectory instances
+     */
+    function* filesGenerator(): Iterator<
+      DriveFile | { isFile: false; isDirectory: true; prefix: string; name: string }
+    > {
+      if (response.CommonPrefixes) {
+        for (const directory of response.CommonPrefixes) {
+          yield new DriveDirectory(directory.Prefix!.replace(/\/$/, ''))
+        }
+      }
+      if (response.Contents) {
+        for (const file of response.Contents) {
+          yield new DriveFile(file.Key!, self, self.#createFileMetaData(file))
+        }
+      }
+    }
+
+    return {
+      paginationToken: response.NextContinuationToken,
+      objects: {
+        [Symbol.iterator]: filesGenerator,
+      },
+    }
   }
 }

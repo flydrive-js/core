@@ -41,7 +41,7 @@ test.group('GCS Driver | exists', (group) => {
     })
     await fdgcs.put(key, contents)
 
-    assert.isTrue(await fdgcs.exist(key))
+    assert.isTrue(await fdgcs.exists(key))
   })
 
   test('return false when file does not exist', async ({ assert }) => {
@@ -54,7 +54,7 @@ test.group('GCS Driver | exists', (group) => {
       usingUniformAcl: true,
     })
 
-    assert.isFalse(await fdgcs.exist(key))
+    assert.isFalse(await fdgcs.exists(key))
   })
 
   test('return false when object is a folder', async ({ assert }) => {
@@ -70,6 +70,6 @@ test.group('GCS Driver | exists', (group) => {
 
     await fdgcs.put(key, contents)
 
-    assert.isFalse(await fdgcs.exist('foo'))
+    assert.isFalse(await fdgcs.exists('foo'))
   })
 })
