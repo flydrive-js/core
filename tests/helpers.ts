@@ -31,6 +31,7 @@ export async function deleteS3Objects(client: S3Client, bucket: string, prefix: 
                 Key: object.Key,
               }
             }),
+            Quiet: true,
           },
         })
       )
