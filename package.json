@@ -18,7 +18,9 @@
     "./drivers/fs": "./build/drivers/fs/main.js",
     "./drivers/fs/types": "./build/drivers/fs/types.js",
     "./drivers/gcs": "./build/drivers/gcs/main.js",
-    "./drivers/gcs/types": "./build/drivers/gcs/types.js"
+    "./drivers/gcs/types": "./build/drivers/gcs/types.js",
+    "./drivers/s3": "./build/drivers/s3/main.js",
+    "./drivers/s3/types": "./build/drivers/s3/types.js"
   },
   "scripts": {
     "clean": "del-cli build",
@@ -126,7 +128,9 @@
       "./drivers/fs/main.ts",
       "./drivers/fs/types.ts",
       "./drivers/gcs/main.ts",
-      "./drivers/gcs/types.ts"
+      "./drivers/gcs/types.ts",
+      "./drivers/s3/main.ts",
+      "./drivers/s3/types.ts"
     ],
     "outDir": "./build",
     "clean": true,
