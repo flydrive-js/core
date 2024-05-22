@@ -132,7 +132,7 @@ test.group('S3 Driver | copy', (group) => {
     })
 
     await s3fs.copy(source, destination)
-    assert.equal(await s3fs.getMetaData(destination), 'private')
+    assert.equal(await s3fs.getVisibility(destination), 'private')
 
     assert.isTrue(await s3fs.exists(source))
   }).skip(!SUPPORTS_ACL, 'Service does not support ACL. Hence, we cannot control file visibility')
