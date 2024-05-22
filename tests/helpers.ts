@@ -40,7 +40,6 @@ export async function deleteS3Objects(client: S3Client, bucket: string, prefix: 
       console.log(objects)
       console.log(error.$response)
       console.log('======= BULK DELETE FAILURE END =======')
-      throw error
     }
   }
 }
