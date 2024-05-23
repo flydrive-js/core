@@ -262,4 +262,16 @@ test.group('S3 Driver | listAll | nested dir', (group) => {
       },
     ])
   })
+
+  test('do not throw error when listing files of a non-existing directory', async ({ assert }) => {
+    const s3fs = new S3Driver({
+      visibility: 'public',
+      client: client,
+      bucket: S3_BUCKET,
+      supportsACL: SUPPORTS_ACL,
+    })
+
+    const { objects } = await s3fs.listAll('foo', { recursive: true })
+    assert.deepEqual(Array.from(objects), [])
+  })
 })

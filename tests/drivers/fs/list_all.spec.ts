@@ -122,4 +122,14 @@ test.group('FS Driver | listAll | nested dir', () => {
       },
     ])
   })
+
+  test('do not throw error when listing files of a non-existing directory', async ({
+    fs,
+    assert,
+  }) => {
+    const fdfs = new FSDriver({ location: fs.baseUrl, visibility: 'public' })
+
+    const { objects } = await fdfs.listAll('foo', { recursive: true })
+    assert.deepEqual(Array.from(objects), [])
+  })
 })

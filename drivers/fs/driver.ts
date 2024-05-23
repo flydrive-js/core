@@ -16,7 +16,7 @@ import { fileURLToPath } from 'node:url'
 import { Retrier } from '@humanwhocodes/retry'
 import { RuntimeException } from '@poppinss/utils'
 import { dirname, join, relative } from 'node:path'
-import { existsSync, rmSync, createReadStream } from 'node:fs'
+import { existsSync, rmSync, createReadStream, Dirent } from 'node:fs'
 
 import debug from './debug.js'
 import type { FSDriverOptions } from './types.js'
@@ -67,6 +67,23 @@ export class FSDriver implements DriverContract {
   #read(key: string): Promise<Buffer> {
     const location = join(this.#rootUrl, key)
     return this.#retrier.retry(() => fsp.readFile(location))
+  }
+
+  /**
+   * Reads dir and ignores non-existing errors
+   */
+  async #readDir(location: string, recursive: boolean): Promise<Dirent[]> {
+    try {
+      return await fsp.readdir(location, {
+        recursive,
+        withFileTypes: true,
+      })
+    } catch (error) {
+      if (error.code !== 'ENOENT') {
+        throw error
+      }
+      return []
+    }
   }
 
   /**
@@ -333,10 +350,7 @@ export class FSDriver implements DriverContract {
     /**
      * Reading files with their types.
      */
-    const files = await fsp.readdir(location, {
-      recursive,
-      withFileTypes: true,
-    })
+    const files = await this.#readDir(location, recursive)
 
     /**
      * The generator is used to lazily iterate over files and

@@ -244,4 +244,15 @@ test.group('GCS Driver | listAll | nested dir', (group) => {
       },
     ])
   })
+
+  test('do not throw error when listing files of a non-existing directory', async ({ assert }) => {
+    const fdgcs = new GCSDriver({
+      visibility: 'public',
+      bucket: GCS_BUCKET,
+      credentials: GCS_KEY,
+    })
+
+    const { objects } = await fdgcs.listAll('foo', { recursive: true })
+    assert.deepEqual(Array.from(objects), [])
+  })
 })
