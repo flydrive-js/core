@@ -142,6 +142,8 @@ test.group('S3 Driver | put', (group) => {
       contentType: 'image/png',
       cacheControl: 'no-cache',
       contentEncoding: 'binary',
+      contentLanguage: 'en-IN',
+      contentDisposition: 'attachment',
     })
 
     /**
@@ -151,6 +153,8 @@ test.group('S3 Driver | put', (group) => {
     assert.equal(response.ContentType, 'image/png')
     assert.equal(response.ContentEncoding, 'binary')
     assert.equal(response.CacheControl, 'no-cache')
+    assert.equal(response.ContentDisposition, 'attachment')
+    assert.equal(response.ContentLanguage, 'en-IN')
   })
 
   test('create file with local visibility', async ({ assert }) => {

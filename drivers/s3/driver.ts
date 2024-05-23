@@ -173,7 +173,7 @@ export class S3Driver implements DriverContract {
     /**
      * Return early if no files exists
      */
-    if (!response.Contents) {
+    if (!response.Contents || !response.Contents.length) {
       return
     }
 

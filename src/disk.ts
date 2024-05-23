@@ -218,8 +218,8 @@ export class Disk {
    * Delete all files matching the given prefix. In case of "fs" driver,
    * the mentioned folder will be deleted.
    */
-  async deleteAll(prefix: string): Promise<void> {
-    prefix = this.#normalizer.normalize(prefix)
+  async deleteAll(prefix?: string): Promise<void> {
+    prefix = prefix && prefix !== '/' ? this.#normalizer.normalize(prefix) : '/'
     try {
       return await this.driver.deleteAll(prefix)
     } catch (error) {
@@ -232,7 +232,7 @@ export class Disk {
    * In case of "recursive" listing, no directories are returned.
    */
   listAll(
-    prefix: string,
+    prefix?: string,
     options?: {
       recursive?: boolean
       paginationToken?: string
@@ -241,7 +241,7 @@ export class Disk {
     paginationToken?: string
     objects: Iterable<DriveFile | DriveDirectory>
   }> {
-    prefix = this.#normalizer.normalize(prefix)
+    prefix = prefix && prefix !== '/' ? this.#normalizer.normalize(prefix) : '/'
     return this.driver.listAll(prefix, options)
   }
 }

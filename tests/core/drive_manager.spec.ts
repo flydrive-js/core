@@ -179,4 +179,39 @@ test.group('Drive Manager', () => {
     drive.restore()
     assert.notStrictEqual(fake, drive.use())
   })
+
+  test('use fakes assertions', async ({ fs, assert }) => {
+    const drive = new DriveManager({
+      default: 'fs',
+      services: {
+        fs: () => new FSDriver({ location: fs.baseUrl, visibility: 'public' }),
+        gcs: () =>
+          new GCSDriver({
+            visibility: 'public',
+            bucket: GCS_BUCKET,
+            credentials: GCS_KEY,
+            usingUniformAcl: true,
+          }),
+      },
+      fakes: {
+        location: fs.baseUrl,
+      },
+    })
+
+    const fake = drive.fake('gcs')
+    await drive.use('gcs').put('hello.txt', 'Hello world')
+
+    fake.assertExists('hello.txt')
+    fake.assertMissing('foo.txt')
+
+    assert.throws(
+      () => fake.assertExists('foo.txt'),
+      'Expected "foo.txt" to exist, but file not found'
+    )
+
+    assert.throws(
+      () => fake.assertMissing('hello.txt'),
+      'Expected "hello.txt" to be missing, but file exists'
+    )
+  })
 })

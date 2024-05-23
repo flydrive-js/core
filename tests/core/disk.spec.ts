@@ -467,3 +467,105 @@ test.group('Disk | DriveFile | toSnapshot', () => {
     })
   })
 })
+
+test.group('Disk | delete', () => {
+  test('delete an existing file', async ({ fs, assert }) => {
+    const key = 'hello.txt'
+    const contents = 'Hello world'
+
+    const fdfs = new FSDriver({ location: fs.baseUrl, visibility: 'public' })
+    const disk = new Disk(fdfs)
+
+    await disk.put(key, contents)
+    await disk.delete(key)
+    assert.isFalse(await disk.exists(key))
+  })
+
+  test('wrap driver errors to a generic error', async ({ fs, assert }) => {
+    assert.plan(3)
+    const key = 'hello.txt'
+
+    const fdfs = new FSDriver({ location: fs.baseUrl, visibility: 'public' })
+    const disk = new Disk(fdfs)
+
+    fdfs.delete = function () {
+      throw new Error('Delete operation failed')
+    }
+
+    try {
+      await disk.delete(key)
+    } catch (error) {
+      assert.instanceOf(error, errors.E_CANNOT_DELETE_FILE)
+      assert.equal(error.message, 'Cannot delete file at location "hello.txt"')
+      assert.equal(error.cause.message, 'Delete operation failed')
+    }
+  })
+})
+
+test.group('Disk | deleteAll', () => {
+  test('delete all files', async ({ fs, assert }) => {
+    const key = 'hello.txt'
+    const contents = 'Hello world'
+
+    const fdfs = new FSDriver({ location: fs.baseUrl, visibility: 'public' })
+    const disk = new Disk(fdfs)
+
+    await disk.put(key, contents)
+    await disk.deleteAll()
+    assert.isFalse(await disk.exists(key))
+  })
+
+  test('wrap driver errors to a generic error', async ({ fs, assert }) => {
+    assert.plan(3)
+
+    const fdfs = new FSDriver({ location: fs.baseUrl, visibility: 'public' })
+    const disk = new Disk(fdfs)
+
+    fdfs.deleteAll = function () {
+      throw new Error('Delete operation failed')
+    }
+
+    try {
+      await disk.deleteAll()
+    } catch (error) {
+      assert.instanceOf(error, errors.E_CANNOT_DELETE_DIRECTORY)
+      assert.equal(error.message, 'Cannot delete directory at location "/"')
+      assert.equal(error.cause.message, 'Delete operation failed')
+    }
+  })
+})
+
+test.group('Disk | listAll', () => {
+  test('list all files', async ({ fs, assert }) => {
+    const keys = ['hello.txt', 'foo/bar/hello.txt', 'baz/hello.txt']
+    const contents = 'Hello world'
+
+    const fdfs = new FSDriver({ location: fs.baseUrl, visibility: 'public' })
+    const disk = new Disk(fdfs)
+    for (const key of keys) {
+      await disk.put(key, contents)
+    }
+
+    const { objects } = await disk.listAll('/', { recursive: true })
+    assert.deepEqual(Array.from(objects), [
+      {
+        isDirectory: false,
+        isFile: true,
+        name: 'hello.txt',
+        key: 'hello.txt',
+      },
+      {
+        isDirectory: false,
+        isFile: true,
+        name: 'hello.txt',
+        key: 'foo/bar/hello.txt',
+      },
+      {
+        isDirectory: false,
+        isFile: true,
+        name: 'hello.txt',
+        key: 'baz/hello.txt',
+      },
+    ])
+  })
+})

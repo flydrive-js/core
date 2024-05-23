@@ -131,3 +131,53 @@ test.group('Disk | GCS | moveFromFs', (group) => {
     }
   })
 })
+
+test.group('Disk | setVisibility', (group) => {
+  group.each.setup(() => {
+    return async () => {
+      await bucket.deleteFiles()
+      await noUniformedAclBucket.deleteFiles()
+    }
+  })
+  group.each.timeout(10_000)
+
+  test('set file visibility', async ({ assert }) => {
+    const key = `${string.random(6)}.txt`
+    const contents = 'Hello world'
+
+    const fdgcs = new GCSDriver({
+      visibility: 'public',
+      bucket: GCS_FINE_GRAINED_ACL_BUCKET,
+      credentials: GCS_KEY,
+      usingUniformAcl: true,
+    })
+    await fdgcs.put(key, contents)
+
+    const disk = new Disk(fdgcs)
+    await disk.setVisibility(key, 'private')
+    const visibility = await disk.getVisibility(key)
+    assert.equal(visibility, 'private')
+  })
+
+  test('wrap driver errors to a generic error', async ({ assert }) => {
+    const key = `${string.random(6)}.txt`
+    const contents = 'Hello world'
+
+    const fdgcs = new GCSDriver({
+      visibility: 'public',
+      bucket: GCS_BUCKET,
+      credentials: GCS_KEY,
+      usingUniformAcl: true,
+    })
+    await fdgcs.put(key, contents)
+
+    const disk = new Disk(fdgcs)
+    try {
+      await disk.setVisibility(key, 'private')
+    } catch (error) {
+      assert.instanceOf(error, errors.E_CANNOT_SET_VISIBILITY)
+      assert.equal(error.message, `Unable to set visibility for file at location "${key}"`)
+      assert.match(error.cause.message, /Cannot update access control for an object when uniform/)
+    }
+  })
+})
