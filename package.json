@@ -24,7 +24,6 @@
   },
   "scripts": {
     "clean": "del-cli build",
-    "copy:templates": "copyfiles \"stubs/**/*.stub\" build",
     "typecheck": "tsc --noEmit",
     "lint": "eslint . --ext=.ts",
     "format": "prettier --write .",
@@ -33,7 +32,6 @@
     "test": "c8 npm run quick:test",
     "prebuild": "npm run lint && npm run clean",
     "build": "tsup-node && tsc --emitDeclarationOnly --declaration",
-    "postbuild": "npm run copy:templates",
     "release": "np",
     "version": "npm run build",
     "prepublishOnly": "npm run build"
@@ -47,6 +45,12 @@
   ],
   "author": "virk,flydrive",
   "license": "MIT",
+  "dependencies": {
+    "@humanwhocodes/retry": "^0.3.0",
+    "@poppinss/utils": "^6.7.3",
+    "etag": "^1.8.1",
+    "mime-types": "^2.1.35"
+  },
   "devDependencies": {
     "@adonisjs/env": "^6.0.1",
     "@adonisjs/eslint-config": "^1.3.0",
@@ -115,12 +119,6 @@
     "extends": "@adonisjs/eslint-config/package"
   },
   "prettier": "@adonisjs/prettier-config",
-  "dependencies": {
-    "@humanwhocodes/retry": "^0.3.0",
-    "@poppinss/utils": "^6.7.3",
-    "etag": "^1.8.1",
-    "mime-types": "^2.1.35"
-  },
   "tsup": {
     "entry": [
       "./index.ts",

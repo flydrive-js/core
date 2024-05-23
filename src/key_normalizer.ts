@@ -1,5 +1,5 @@
 /*
- * @flydrive/core
+ * flydrive
  *
  * (c) FlyDrive
  *
