@@ -39,10 +39,13 @@ export class KeyNormalizer {
     let normalizedKey = string.condenseWhitespace(key)
 
     /**
-     * Normalize slashes to unix style
-     * Remove consecutive '/'
+     * - Normalize slashes to unix style
+     * - Remove consecutive '/'
+     * - Remove more than two dots + slash "..../" to "../"
      */
-    return slash(normalizedKey).replace(/\/{2,}/g, '/')
+    return slash(normalizedKey)
+      .replace(/\/{2,}/g, '/')
+      .replace(/\.{3,}\//g, '../')
   }
 
   /**
@@ -85,7 +88,7 @@ export class KeyNormalizer {
 
     /**
      * Remove leading and ending '/'
-     * Remove leading and ending '.'
+     * Remove leading and ending "."
      */
     return normalizedKey.replace(/^\/|\/$/g, '').replace(/^\.|\.$/g, '')
   }

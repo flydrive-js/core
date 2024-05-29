@@ -124,6 +124,15 @@ test.group('Key normalizer | Path traversal', () => {
       {
         key: '/./../some/dir',
       },
+      {
+        key: '.../foo/bar',
+      },
+      {
+        key: '\\something\\...\\...\\dirname',
+      },
+      {
+        key: 'beyond/root/.../',
+      },
     ])
     .run(({ assert }, { key }) => {
       assert.throws(
@@ -179,6 +188,10 @@ test.group('Key normalizer | Post normalization', () => {
       {
         key: 'C\\dirname\\\\subdir\\\\\\subsubdir',
         output: 'C/dirname/subdir/subsubdir',
+      },
+      {
+        key: '...hello-world',
+        output: '..hello-world',
       },
     ])
     .run(({ assert }, { key, output }) => {
