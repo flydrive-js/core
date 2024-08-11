@@ -113,7 +113,7 @@ test.group('S3 Driver | getUrl', (group) => {
 test.group('S3 Driver | getSignedUrl', (group) => {
   group.each.setup(() => {
     return async () => {
-      // await deleteS3Objects(client, S3_BUCKET, '/')
+      await deleteS3Objects(client, S3_BUCKET, '/')
     }
   })
   group.each.timeout(10_000)

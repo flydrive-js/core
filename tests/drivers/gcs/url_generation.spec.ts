@@ -41,7 +41,7 @@ test.group('GCS Driver | getUrl', (group) => {
       visibility: 'public',
       bucket: GCS_FINE_GRAINED_ACL_BUCKET,
       credentials: GCS_KEY,
-      usingUniformAcl: true,
+      usingUniformAcl: false,
     })
 
     await fdgcs.put(key, 'hello world')
