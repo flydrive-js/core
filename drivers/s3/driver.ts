@@ -403,7 +403,7 @@ export class S3Driver implements DriverContract {
      * Make sure using CDN URL property
      */
     if (this.options.cdnUrl) {
-      return new URL(`/${this.options.bucket}/${key}`, this.options.cdnUrl).toString()
+      return new URL(key, this.options.cdnUrl).toString()
     }
 
     /**
@@ -411,6 +411,7 @@ export class S3Driver implements DriverContract {
      */
     if (this.#client.config.endpoint) {
       const endpoint = await this.#client.config.endpoint()
+
       return new URL(
         `/${this.options.bucket}/${key}`,
         `${endpoint.protocol}//${endpoint.hostname}`

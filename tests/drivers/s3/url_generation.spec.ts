@@ -7,6 +7,7 @@
  * file that was distributed with this source code.
  */
 
+import got from 'got'
 import { test } from '@japa/runner'
 import string from '@poppinss/utils/string'
 import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3'
@@ -15,6 +16,8 @@ import { S3Driver } from '../../../drivers/s3/driver.js'
 import {
   S3_REGION,
   S3_BUCKET,
+  S3_CDN_URL,
+  S3_SERVICE,
   S3_ENDPOINT,
   SUPPORTS_ACL,
   AWS_ACCESS_KEY,
@@ -53,8 +56,18 @@ test.group('S3 Driver | getUrl', (group) => {
       supportsACL: SUPPORTS_ACL,
     })
 
+    await s3fs.put(key, 'hello world')
     const fileURL = await s3fs.getUrl(key)
+
     assert.equal(fileURL, `${S3_ENDPOINT}/${S3_BUCKET}/${key}`)
+
+    /**
+     * R2 files are private unless a cdnURL is assigned to them
+     */
+    if (S3_SERVICE !== 'r2') {
+      const fileContents = await got.get(fileURL)
+      assert.equal(fileContents.body, 'hello world')
+    }
   })
 
   test('use custom implementation for generating public URL', async ({ assert }) => {
@@ -67,7 +80,7 @@ test.group('S3 Driver | getUrl', (group) => {
       supportsACL: SUPPORTS_ACL,
       urlBuilder: {
         async generateURL(fileKey, fileBucket) {
-          return `https://cdn.example.com/${fileBucket}/${fileKey}`
+          return new URL(fileKey, `https://cdn.example.com/${fileBucket}/`).toString()
         },
       },
     })
@@ -84,18 +97,23 @@ test.group('S3 Driver | getUrl', (group) => {
       client: client,
       bucket: S3_BUCKET,
       supportsACL: SUPPORTS_ACL,
-      cdnUrl: 'https://cdn.example.com',
+      cdnUrl: S3_CDN_URL,
     })
 
+    await s3fs.put(key, 'hello world')
     const fileURL = await s3fs.getUrl(key)
-    assert.equal(fileURL, `https://cdn.example.com/${S3_BUCKET}/${key}`)
+
+    const fileContents = await got.get(fileURL)
+
+    assert.equal(fileURL, new URL(key, S3_CDN_URL).toString())
+    assert.equal(fileContents.body, 'hello world')
   })
 })
 
 test.group('S3 Driver | getSignedUrl', (group) => {
   group.each.setup(() => {
     return async () => {
-      await deleteS3Objects(client, S3_BUCKET, '/')
+      // await deleteS3Objects(client, S3_BUCKET, '/')
     }
   })
   group.each.timeout(10_000)
@@ -104,17 +122,23 @@ test.group('S3 Driver | getSignedUrl', (group) => {
     const key = `${string.random(6)}.txt`
 
     const s3fs = new S3Driver({
-      visibility: 'public',
+      visibility: 'private',
       client: client,
       bucket: S3_BUCKET,
       supportsACL: SUPPORTS_ACL,
     })
 
+    await s3fs.put(key, 'hello world')
+
     const fileURL = new URL(await s3fs.getSignedUrl(key))
+    const fileContents = await got.get(fileURL)
+
     assert.include(fileURL.hostname, S3_BUCKET)
     assert.equal(fileURL.pathname, `/${key}`)
     assert.isTrue(fileURL.searchParams.has('X-Amz-Signature'))
     assert.isTrue(fileURL.searchParams.has('X-Amz-Expires'))
+
+    assert.equal(fileContents.body, 'hello world')
   })
 
   test('define content type for the file', async ({ assert }) => {

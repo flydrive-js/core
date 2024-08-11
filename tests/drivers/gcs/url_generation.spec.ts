@@ -7,6 +7,7 @@
  * file that was distributed with this source code.
  */
 
+import got from 'got'
 import { test } from '@japa/runner'
 import string from '@poppinss/utils/string'
 import { Storage } from '@google-cloud/storage'
@@ -43,8 +44,13 @@ test.group('GCS Driver | getUrl', (group) => {
       usingUniformAcl: true,
     })
 
+    await fdgcs.put(key, 'hello world')
+
     const fileURL = await fdgcs.getUrl(key)
     assert.equal(fileURL, `https://storage.googleapis.com/${GCS_BUCKET}/${key}`)
+
+    const fileContents = await got.get(fileURL)
+    assert.equal(fileContents.body, 'hello world')
   })
 
   test('use custom implementation for generating public URL', async ({ assert }) => {
@@ -86,10 +92,15 @@ test.group('GCS Driver | getSignedUrl', (group) => {
       usingUniformAcl: true,
     })
 
+    await fdgcs.put(key, 'hello world')
+
     const fileURL = new URL(await fdgcs.getSignedUrl(key))
     assert.equal(fileURL.pathname, `/${GCS_BUCKET}/${key}`)
     assert.isTrue(fileURL.searchParams.has('Signature'))
     assert.isTrue(fileURL.searchParams.has('Expires'))
+
+    const fileContents = await got.get(fileURL)
+    assert.equal(fileContents.body, 'hello world')
   })
 
   test('define content type for the file', async ({ assert }) => {
