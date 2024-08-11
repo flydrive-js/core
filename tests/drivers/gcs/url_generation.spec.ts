@@ -39,7 +39,7 @@ test.group('GCS Driver | getUrl', (group) => {
 
     const fdgcs = new GCSDriver({
       visibility: 'public',
-      bucket: GCS_BUCKET,
+      bucket: GCS_FINE_GRAINED_ACL_BUCKET,
       credentials: GCS_KEY,
       usingUniformAcl: true,
     })
@@ -47,7 +47,7 @@ test.group('GCS Driver | getUrl', (group) => {
     await fdgcs.put(key, 'hello world')
 
     const fileURL = await fdgcs.getUrl(key)
-    assert.equal(fileURL, `https://storage.googleapis.com/${GCS_BUCKET}/${key}`)
+    assert.equal(fileURL, `https://storage.googleapis.com/${GCS_FINE_GRAINED_ACL_BUCKET}/${key}`)
 
     const fileContents = await got.get(fileURL)
     assert.equal(fileContents.body, 'hello world')
