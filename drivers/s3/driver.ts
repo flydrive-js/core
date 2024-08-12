@@ -430,7 +430,13 @@ export class S3Driver implements DriverContract {
    * "options.expiresIn" property.
    */
   async getSignedUrl(key: string, options?: SignedURLOptions): Promise<string> {
-    const { contentDisposition, contentType, expiresIn, ...rest } = Object.assign({}, options)
+    const {
+      command = 'get',
+      contentDisposition,
+      contentType,
+      expiresIn,
+      ...rest
+    } = Object.assign({}, options)
 
     /**
      * Options passed to GCS when generating the signed URL.
@@ -441,7 +447,7 @@ export class S3Driver implements DriverContract {
      * Options given to the GetObjectCommand when create a signed
      * URL
      */
-    const signedURLOptions: GetObjectCommandInput = {
+    const signedURLOptions: GetObjectCommandInput | PutObjectCommandInput = {
       Key: key,
       Bucket: this.options.bucket,
       ResponseContentType: contentType,
@@ -459,7 +465,13 @@ export class S3Driver implements DriverContract {
     }
 
     debug('generating signed URL %s:%s', this.options.bucket, key)
-    return getSignedUrl(this.#client, this.createGetObjectCommand(this.#client, signedURLOptions), {
+
+    const commandObject =
+      command === 'put'
+        ? this.createPutObjectCommand(this.#client, signedURLOptions)
+        : this.createGetObjectCommand(this.#client, signedURLOptions)
+
+    return getSignedUrl(this.#client, commandObject, {
       expiresIn: expires,
     })
   }
