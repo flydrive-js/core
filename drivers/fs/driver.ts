@@ -150,7 +150,7 @@ export class FSDriver implements DriverContract {
    * Returns the contents of the file as an Uint8Array. An
    * exception is thrown when the file is missing.
    */
-  async getArrayBuffer(key: string): Promise<ArrayBuffer> {
+  async getBytes(key: string): Promise<Uint8Array> {
     debug('reading file contents as array buffer %s:%s', this.#rootUrl, key)
     return this.#read(key).then((value) => new Uint8Array(value.buffer))
   }

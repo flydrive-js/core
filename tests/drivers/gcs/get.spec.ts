@@ -60,7 +60,7 @@ test.group('GCS Driver | get', (group) => {
   })
 })
 
-test.group('GCS Driver | getArrayBuffer', (group) => {
+test.group('GCS Driver | getBytes', (group) => {
   group.each.setup(() => {
     return async () => {
       await bucket.deleteFiles()
@@ -80,7 +80,7 @@ test.group('GCS Driver | getArrayBuffer', (group) => {
     })
 
     await fdgcs.put(key, contents)
-    assert.equal(new TextDecoder().decode(await fdgcs.getArrayBuffer(key)), contents)
+    assert.equal(new TextDecoder().decode(await fdgcs.getBytes(key)), contents)
   })
 
   test('return error when file does not exist', async ({ assert }) => {
@@ -93,7 +93,7 @@ test.group('GCS Driver | getArrayBuffer', (group) => {
     })
 
     await assert.rejects(async () => {
-      await fdgcs.getArrayBuffer(key)
+      await fdgcs.getBytes(key)
     }, /No such object:/)
   })
 })

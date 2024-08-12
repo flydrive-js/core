@@ -82,7 +82,15 @@ export class Disk {
   /**
    * Returns file contents as a Uint8Array.
    */
-  getArrayBuffer(key: string): Promise<ArrayBuffer> {
+  getBytes(key: string): Promise<Uint8Array> {
+    return this.file(key).getBytes()
+  }
+
+  /**
+   * @deprecated
+   * @see {@link Disk.getBytes}
+   */
+  getArrayBuffer(key: string): Promise<Uint8Array> {
     return this.file(key).getArrayBuffer()
   }
 

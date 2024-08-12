@@ -73,7 +73,7 @@ test.group('Disk | getStream', () => {
   })
 })
 
-test.group('Disk | getArrayBuffer', () => {
+test.group('Disk | getBytes', () => {
   test('get file contents as array buffer', async ({ fs, assert }) => {
     const key = 'hello.txt'
     const contents = 'Hello world'
@@ -82,7 +82,7 @@ test.group('Disk | getArrayBuffer', () => {
     await fdfs.put(key, contents)
     const disk = new Disk(fdfs)
 
-    assert.equal(new TextDecoder().decode(await disk.getArrayBuffer(key)), contents)
+    assert.equal(new TextDecoder().decode(await disk.getBytes(key)), contents)
   })
 
   test('wrap driver errors to a generic error', async ({ fs, assert }) => {
@@ -93,7 +93,7 @@ test.group('Disk | getArrayBuffer', () => {
     const disk = new Disk(fdfs)
 
     try {
-      await disk.getArrayBuffer(key)
+      await disk.getBytes(key)
     } catch (error) {
       assert.instanceOf(error, errors.E_CANNOT_READ_FILE)
       assert.equal(error.message, 'Cannot read file from location "hello.txt"')

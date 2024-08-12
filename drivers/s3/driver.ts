@@ -330,7 +330,7 @@ export class S3Driver implements DriverContract {
    * Returns the contents of the file as an Uint8Array. An
    * exception is thrown when the file is missing.
    */
-  async getArrayBuffer(key: string): Promise<ArrayBuffer> {
+  async getBytes(key: string): Promise<Uint8Array> {
     debug('reading file contents as array buffer %s:%s', this.options.bucket, key)
     const response = await this.#client.send(
       this.createGetObjectCommand(this.#client, {

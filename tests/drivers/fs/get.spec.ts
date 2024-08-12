@@ -62,7 +62,7 @@ test.group('FS Driver | getStream', () => {
   })
 })
 
-test.group('FS Driver | getArrayBuffer', () => {
+test.group('FS Driver | getBytes', () => {
   test('get file contents as array buffer', async ({ fs, assert }) => {
     const key = 'hello.txt'
     const contents = 'Hello world'
@@ -70,7 +70,7 @@ test.group('FS Driver | getArrayBuffer', () => {
     const fdfs = new FSDriver({ location: fs.baseUrl, visibility: 'public' })
     await fdfs.put(key, contents)
 
-    assert.equal(new TextDecoder().decode(await fdfs.getArrayBuffer(key)), contents)
+    assert.equal(new TextDecoder().decode(await fdfs.getBytes(key)), contents)
   })
 
   test('return error when file does not exist', async ({ fs, assert }) => {
@@ -78,7 +78,7 @@ test.group('FS Driver | getArrayBuffer', () => {
     const fdfs = new FSDriver({ location: fs.baseUrl, visibility: 'public' })
 
     await assert.rejects(async () => {
-      await fdfs.getArrayBuffer(key)
+      await fdfs.getBytes(key)
     }, /ENOENT: no such file or directory/)
   })
 })

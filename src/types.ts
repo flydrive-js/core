@@ -90,11 +90,11 @@ export interface DriverContract {
   getStream(key: string): Promise<Readable>
 
   /**
-   * Return contents of an object for the given key as an ArrayBuffer.
+   * Return contents of an object for the given key as an Uint8Array.
    * Should throw "E_CANNOT_READ_FILE" error when the file
    * does not exists.
    */
-  getArrayBuffer(key: string): Promise<ArrayBuffer>
+  getBytes(key: string): Promise<Uint8Array>
 
   /**
    * Return metadata of an object for the given key.

@@ -103,12 +103,24 @@ export class DriveFile {
   /**
    * Returns file contents as a Uint8Array.
    */
-  async getArrayBuffer(): Promise<ArrayBuffer> {
+  async getBytes(): Promise<Uint8Array> {
     try {
-      return await this.#driver.getArrayBuffer(this.key)
+      return await this.#driver.getBytes(this.key)
     } catch (error) {
       throw new errors.E_CANNOT_READ_FILE([this.key], { cause: error })
     }
+  }
+
+  /**
+   * @deprecated
+   * @see {@link DriveFile.getBytes}
+   */
+  async getArrayBuffer(): Promise<Uint8Array> {
+    process.emitWarning(
+      'getArrayBuffer() method has been deprecated. Instead use "getBytes"',
+      'DeprecationWarning'
+    )
+    return this.getBytes()
   }
 
   /**

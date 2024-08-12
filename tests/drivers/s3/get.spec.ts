@@ -73,7 +73,7 @@ test.group('S3 Driver | get', (group) => {
   })
 })
 
-test.group('S3 Driver | getArrayBuffer', (group) => {
+test.group('S3 Driver | getBytes', (group) => {
   group.each.setup(() => {
     return async () => {
       await deleteS3Objects(client, S3_BUCKET, '/')
@@ -93,7 +93,7 @@ test.group('S3 Driver | getArrayBuffer', (group) => {
     })
 
     await s3fs.put(key, contents)
-    assert.equal(new TextDecoder().decode(await s3fs.getArrayBuffer(key)), contents)
+    assert.equal(new TextDecoder().decode(await s3fs.getBytes(key)), contents)
   })
 
   test('return error when file does not exist', async ({ assert }) => {
@@ -106,7 +106,7 @@ test.group('S3 Driver | getArrayBuffer', (group) => {
     })
 
     await assert.rejects(async () => {
-      await s3fs.getArrayBuffer(key)
+      await s3fs.getBytes(key)
     }, /UnknownError|The specified key does not exist/)
   })
 })
