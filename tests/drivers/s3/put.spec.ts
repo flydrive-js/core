@@ -278,6 +278,6 @@ test.group('S3 Driver | putStream', (group) => {
 
     await assert.rejects(async () => {
       await s3fs.putStream(key, createReadStream(join(fs.basePath, key)))
-    }, /UnknownError|no such file or directory/)
+    }, /UnknownError|Invalid value "undefined" for header|no such file or directory/)
   })
 })
