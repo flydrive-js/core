@@ -519,16 +519,21 @@ export class S3Driver implements DriverContract {
        * pipeline method and relying on the "pipe" method instead.
        */
       contents.once('error', reject)
-      const command = this.createPutObjectCommand(this.#client, {
-        ...this.#getSaveOptions(key, options),
-        Key: key,
-        Body: contents,
-      })
 
-      return this.#client
-        .send(command)
-        .then(() => resolve())
-        .catch(reject)
+      try {
+        const command = this.createPutObjectCommand(this.#client, {
+          ...this.#getSaveOptions(key, options),
+          Key: key,
+          Body: contents,
+        })
+
+        return this.#client
+          .send(command)
+          .then(() => resolve())
+          .catch(reject)
+      } catch (error) {
+        reject(error)
+      }
     })
   }
 

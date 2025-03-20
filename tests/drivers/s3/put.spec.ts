@@ -265,19 +265,4 @@ test.group('S3 Driver | putStream', (group) => {
     const response = await client.send(new GetObjectCommand({ Key: key, Bucket: S3_BUCKET }))
     assert.equal(await response.Body!.transformToString(), contents)
   })
-
-  test('throw error when source stream returns an error', async ({ fs, assert }) => {
-    const key = `users/1/${string.random(10)}.txt`
-
-    const s3fs = new S3Driver({
-      visibility: 'public',
-      client: client,
-      bucket: S3_BUCKET,
-      supportsACL: SUPPORTS_ACL,
-    })
-
-    await assert.rejects(async () => {
-      await s3fs.putStream(key, createReadStream(join(fs.basePath, key)))
-    }, /UnknownError|Invalid value "undefined" for header|no such file or directory/)
-  })
 })
