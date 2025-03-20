@@ -10,7 +10,7 @@
 import { Env } from '@adonisjs/env'
 import { readFile } from 'node:fs/promises'
 
-Env.identifier('file', (value) => {
+Env.defineIdentifier('file', (value) => {
   return readFile(new URL(`../../../${value}`, import.meta.url), 'utf-8')
 })
 
