@@ -8,7 +8,6 @@
  */
 
 import { join } from 'node:path'
-import getStream from 'get-stream'
 import { test } from '@japa/runner'
 import { createReadStream } from 'node:fs'
 import string from '@poppinss/utils/string'
@@ -62,7 +61,7 @@ test.group('S3 Driver | put', (group) => {
      * Verify put operation
      */
     const response = await client.send(new GetObjectCommand({ Key: key, Bucket: S3_BUCKET }))
-    assert.equal(await getStream(response.Body), contents)
+    assert.equal(await response.Body!.transformToString(), contents)
   })
 
   test('create file from Uint8Array', async ({ assert }) => {
@@ -82,7 +81,7 @@ test.group('S3 Driver | put', (group) => {
      * Verify put operation
      */
     const response = await client.send(new GetObjectCommand({ Key: key, Bucket: S3_BUCKET }))
-    assert.equal(await getStream(response.Body), contents)
+    assert.equal(await response.Body!.transformToString(), contents)
   })
 
   test('overwrite contents of existing file', async ({ assert }) => {
@@ -104,7 +103,7 @@ test.group('S3 Driver | put', (group) => {
      * Verify put operation
      */
     const response = await client.send(new GetObjectCommand({ Key: key, Bucket: S3_BUCKET }))
-    assert.equal(await getStream(response.Body), newContents)
+    assert.equal(await response.Body!.transformToString(), newContents)
   })
 
   test('create files at a nested destination', async ({ assert }) => {
@@ -124,7 +123,7 @@ test.group('S3 Driver | put', (group) => {
      * Verify put operation
      */
     const response = await client.send(new GetObjectCommand({ Key: key, Bucket: S3_BUCKET }))
-    assert.equal(await getStream(response.Body), contents)
+    assert.equal(await response.Body!.transformToString(), contents)
   })
 
   test('create file with custom metadata', async ({ assert }) => {
@@ -243,7 +242,7 @@ test.group('S3 Driver | putStream', (group) => {
      * Verify put operation
      */
     const response = await client.send(new GetObjectCommand({ Key: key, Bucket: S3_BUCKET }))
-    assert.equal(await getStream(response.Body), contents)
+    assert.equal(await response.Body!.transformToString(), contents)
   })
 
   test('create files at a nested destination', async ({ fs, assert }) => {
@@ -264,7 +263,7 @@ test.group('S3 Driver | putStream', (group) => {
      * Verify put operation
      */
     const response = await client.send(new GetObjectCommand({ Key: key, Bucket: S3_BUCKET }))
-    assert.equal(await getStream(response.Body), contents)
+    assert.equal(await response.Body!.transformToString(), contents)
   })
 
   test('throw error when source stream returns an error', async ({ fs, assert }) => {

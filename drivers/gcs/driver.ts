@@ -304,7 +304,12 @@ export class GCSDriver implements DriverContract {
   ): Promise<void> {
     debug('creating/updating file %s:%s', this.options.bucket, key)
     const bucket = this.#storage.bucket(this.options.bucket)
-    await bucket.file(key).save(Buffer.from(contents), this.#getSaveOptions(options))
+    await bucket
+      .file(key)
+      .save(
+        typeof contents === 'string' ? Buffer.from(contents) : Buffer.from(contents),
+        this.#getSaveOptions(options)
+      )
   }
 
   /**
