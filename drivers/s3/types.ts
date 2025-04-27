@@ -7,7 +7,12 @@
  * file that was distributed with this source code.
  */
 
-import type { GetObjectAclCommandInput, S3Client, S3ClientConfig } from '@aws-sdk/client-s3'
+import type {
+  GetObjectAclCommandInput,
+  S3Client,
+  S3ClientConfig,
+  ServerSideEncryption,
+} from '@aws-sdk/client-s3'
 import type { ObjectVisibility } from '../../src/types.js'
 
 /**
@@ -61,6 +66,11 @@ type S3DriverBaseOptions = {
       client: S3Client
     ): Promise<string>
   }
+
+  /**
+   * Encryption to use when uploading files to S3.
+   */
+  encryption?: ServerSideEncryption
 }
 
 /**
