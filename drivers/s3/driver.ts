@@ -114,6 +114,7 @@ export class S3Driver implements DriverContract {
      */
     const s3Options: Omit<PutObjectCommandInput, 'Key'> = {
       Bucket: this.options.bucket,
+      ServerSideEncryption: this.options.encryption,
       ...rest,
     }
 
