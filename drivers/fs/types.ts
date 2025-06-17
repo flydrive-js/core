@@ -41,5 +41,14 @@ export type FSDriverOptions = {
      * Custom implementation for creating signed/temporary URLs
      */
     generateSignedURL?(key: string, filePath: string, options: SignedURLOptions): Promise<string>
+
+    /**
+     * Custom implementation for creating signed/temporary URLs for uploading files
+     */
+    generateSignedUploadURL?(
+      key: string,
+      filePath: string,
+      options: SignedURLOptions
+    ): Promise<string>
   }
 }
