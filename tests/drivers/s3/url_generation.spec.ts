@@ -10,7 +10,7 @@
 import got from 'got'
 import { test } from '@japa/runner'
 import string from '@poppinss/utils/string'
-import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3'
+import { GetObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3'
 
 import { S3Driver } from '../../../drivers/s3/driver.js'
 import {
@@ -213,7 +213,7 @@ test.group('S3 Driver | getSignedUploadUrl', (group) => {
   })
   group.each.timeout(10_000)
 
-  test('get signed URL of a file', async ({ assert }) => {
+  test('get signed upload URL of a file', async ({ assert }) => {
     const key = `${string.random(6)}.txt`
 
     const s3fs = new S3Driver({
@@ -267,7 +267,7 @@ test.group('S3 Driver | getSignedUploadUrl', (group) => {
     })
 
     const fileURL = new URL(
-      await s3fs.getSignedUrl(key, {
+      await s3fs.getSignedUploadUrl(key, {
         contentDisposition: 'attachment',
       })
     )
@@ -287,9 +287,9 @@ test.group('S3 Driver | getSignedUploadUrl', (group) => {
         async generateSignedUploadURL(_, options, s3Client) {
           return getSignedUrl(
             s3Client,
-            new GetObjectCommand({
+            new PutObjectCommand({
               ...options,
-              ResponseCacheControl: 'no-cache',
+              CacheControl: 'no-cache',
             })
           )
         },
@@ -297,6 +297,6 @@ test.group('S3 Driver | getSignedUploadUrl', (group) => {
     })
 
     const fileURL = new URL(await s3fs.getSignedUploadUrl(key))
-    assert.equal(fileURL.searchParams.get('response-cache-control'), 'no-cache')
+    assert.equal(fileURL.searchParams.get('cache-control'), 'no-cache')
   })
 })

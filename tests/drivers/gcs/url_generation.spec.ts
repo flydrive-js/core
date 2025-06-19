@@ -167,3 +167,98 @@ test.group('GCS Driver | getSignedUrl', (group) => {
     assert.equal(fileURL.host, 'cdn.example.com')
   })
 })
+
+test.group('GCS Driver | getSignedUploadUrl', (group) => {
+  group.each.setup(() => {
+    return async () => {
+      await bucket.deleteFiles()
+      await noUniformedAclBucket.deleteFiles()
+    }
+  })
+  group.each.timeout(10_000)
+
+  test('get signed upload URL of a file', async ({ assert }) => {
+    const key = `${string.random(6)}.txt`
+
+    const fdgcs = new GCSDriver({
+      visibility: 'public',
+      bucket: GCS_BUCKET,
+      credentials: GCS_KEY,
+      usingUniformAcl: true,
+    })
+
+    const fileURL = new URL(await fdgcs.getSignedUploadUrl(key))
+    await got.put(fileURL, { body: 'hello world', headers: { 'Content-Type': 'text/plain' } })
+    const fileContents = await got.get(fileURL)
+
+    assert.equal(fileURL.pathname, `/${GCS_BUCKET}/${key}`)
+    assert.isTrue(fileURL.searchParams.has('Signature'))
+    assert.isTrue(fileURL.searchParams.has('Expires'))
+
+    assert.equal(fileContents.body, 'hello world')
+  })
+
+  test('define content type for the file', async ({ assert }) => {
+    const key = `${string.random(6)}.txt`
+
+    const fdgcs = new GCSDriver({
+      visibility: 'public',
+      bucket: GCS_BUCKET,
+      credentials: GCS_KEY,
+      usingUniformAcl: true,
+    })
+
+    const fileURL = new URL(
+      await fdgcs.getSignedUploadUrl(key, {
+        contentType: 'image/png',
+      })
+    )
+
+    assert.equal(fileURL.searchParams.get('response-content-type'), 'image/png')
+  })
+
+  test('define content disposition for the file', async ({ assert }) => {
+    const key = `${string.random(6)}.txt`
+
+    const fdgcs = new GCSDriver({
+      visibility: 'public',
+      bucket: GCS_BUCKET,
+      credentials: GCS_KEY,
+      usingUniformAcl: true,
+    })
+
+    const fileURL = new URL(
+      await fdgcs.getSignedUploadUrl(key, {
+        contentDisposition: 'attachment',
+      })
+    )
+
+    assert.equal(fileURL.searchParams.get('response-content-disposition'), 'attachment')
+  })
+
+  test('use custom implementation for generating signed upload URL', async ({ assert }) => {
+    const key = `${string.random(6)}.txt`
+
+    const fdgcs = new GCSDriver({
+      visibility: 'public',
+      bucket: GCS_BUCKET,
+      credentials: GCS_KEY,
+      usingUniformAcl: true,
+      urlBuilder: {
+        async generateSignedUploadURL(fileKey, fileBucket, options, storage) {
+          const response = await storage
+            .bucket(fileBucket)
+            .file(fileKey)
+            .getSignedUrl({
+              ...options,
+              cname: 'https://cdn.example.com',
+            })
+          return response[0]
+        },
+      },
+    })
+
+    const fileURL = new URL(await fdgcs.getSignedUploadUrl(key))
+    assert.equal(fileURL.host, 'cdn.example.com')
+  })
+})

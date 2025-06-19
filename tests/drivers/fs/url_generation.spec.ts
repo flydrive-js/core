@@ -62,4 +62,30 @@ test.group('FS Driver | getUrl', () => {
 
     assert.equal(await fdfs.getSignedUrl(key), '/assets/hello.txt?signature=foo')
   })
+
+  test('throw error when trying to generate a signed upload URL', async ({ fs, assert }) => {
+    const key = 'hello.txt'
+
+    const fdfs = new FSDriver({ location: fs.baseUrl, visibility: 'public' })
+    await assert.rejects(
+      () => fdfs.getSignedUploadUrl(key),
+      'Cannot generate signed upload URL. The "fs" driver does not support it'
+    )
+  })
+
+  test('use custom implementation to generate a signed upload URL', async ({ fs, assert }) => {
+    const key = 'hello.txt'
+
+    const fdfs = new FSDriver({
+      location: fs.baseUrl,
+      visibility: 'public',
+      urlBuilder: {
+        async generateSignedUploadURL(fileKey) {
+          return `/assets/${fileKey}?signature=foo`
+        },
+      },
+    })
+
+    assert.equal(await fdfs.getSignedUploadUrl(key), '/assets/hello.txt?signature=foo')
+  })
 })
