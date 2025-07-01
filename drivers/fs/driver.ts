@@ -393,7 +393,7 @@ export class FSDriver implements DriverContract {
     > {
       for (const file of files) {
         const relativeName = slash(
-          relative(self.#rootUrl, join(file.parentPath || file.path, file.name))
+          relative(self.#rootUrl, join(file.parentPath ?? file.path, file.name))
         )
         if (file.isFile()) {
           yield new DriveFile(relativeName, self)
