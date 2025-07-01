@@ -28,6 +28,7 @@ import type {
   DriverContract,
   ObjectVisibility,
   SignedURLOptions,
+  UploadSignedURLOptions,
 } from '../../src/types.js'
 
 /**
@@ -229,7 +230,7 @@ export class FSDriver implements DriverContract {
    * By default, the signed URLs expire in 30mins, but a custom expiry can be
    * defined using "options.expiresIn" property.
    */
-  async getSignedUploadUrl(key: string, options?: SignedURLOptions): Promise<string> {
+  async getSignedUploadUrl(key: string, options?: UploadSignedURLOptions): Promise<string> {
     const location = join(this.#rootUrl, key)
     const normalizedOptions = Object.assign(
       {

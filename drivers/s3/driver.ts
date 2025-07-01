@@ -43,6 +43,7 @@ import type {
   ObjectMetaData,
   ObjectVisibility,
   SignedURLOptions,
+  UploadSignedURLOptions,
 } from '../../src/types.js'
 import string from '@poppinss/utils/string'
 
@@ -470,7 +471,7 @@ export class S3Driver implements DriverContract {
   /**
    * Returns a signed URL for uploading objects directly to S3.
    */
-  async getSignedUploadUrl(key: string, options?: SignedURLOptions): Promise<string> {
+  async getSignedUploadUrl(key: string, options?: UploadSignedURLOptions): Promise<string> {
     const { contentType, expiresIn, ...rest } = Object.assign({}, options)
 
     /**
