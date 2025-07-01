@@ -117,6 +117,12 @@ export interface DriverContract {
   getSignedUrl(key: string, options?: SignedURLOptions): Promise<string>
 
   /**
+   * Return the signed/temporary URL that can be used to directly upload
+   * the file contents to the storage.
+   */
+  getSignedUploadUrl(key: string, options?: SignedURLOptions): Promise<string>
+
+  /**
    * Update the visibility of the file
    */
   setVisibility(key: string, visibility: ObjectVisibility): Promise<void>

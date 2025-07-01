@@ -280,6 +280,49 @@ export class GCSDriver implements DriverContract {
   }
 
   /**
+   * Returns the signed/temporary URL that can be used to directly upload
+   * the file contents to the storage. By default, the signed URLs
+   * expire in 30mins, but a custom expiry can be defined using
+   * "options.expiresIn" property.
+   */
+  async getSignedUploadUrl(key: string, options?: SignedURLOptions): Promise<string> {
+    const { contentDisposition, contentType, expiresIn, ...rest } = Object.assign({}, options)
+
+    /**
+     * Options passed to GCS when generating the signed URL.
+     */
+    const expires = new Date()
+    expires.setSeconds(new Date().getSeconds() + string.seconds.parse(expiresIn || '30mins'))
+
+    const signedURLOptions: GetSignedUrlConfig = {
+      action: 'write',
+      expires: expires,
+      contentType,
+      ...rest,
+    }
+
+    /**
+     * Use custom implementation when exists.
+     */
+    const generateSignedUploadURL = this.options.urlBuilder?.generateSignedUploadURL
+    if (generateSignedUploadURL) {
+      debug(
+        'using custom implementation for generating signed upload URL %s:%s',
+        this.options.bucket,
+        key
+      )
+      return generateSignedUploadURL(key, this.options.bucket, signedURLOptions, this.#storage)
+    }
+
+    debug('generating signed URL %s:%s', this.options.bucket, key)
+    const bucket = this.#storage.bucket(this.options.bucket)
+    const file = bucket.file(key)
+
+    const response = await file.getSignedUrl(signedURLOptions)
+    return response[0]
+  }
+
+  /**
    * Updates the visibility of a file
    */
   async setVisibility(key: string, visibility: ObjectVisibility): Promise<void> {

@@ -224,6 +224,29 @@ export class FSDriver implements DriverContract {
     throw new RuntimeException('Cannot generate signed URL. The "fs" driver does not support it')
   }
 
+  async getSignedUploadUrl(key: string, options?: SignedURLOptions): Promise<string> {
+    const location = join(this.#rootUrl, key)
+    const normalizedOptions = Object.assign(
+      {
+        expiresIn: '30 mins',
+      },
+      options
+    )
+
+    /**
+     * Use custom implementation when exists.
+     */
+    const generateSignedUploadURL = this.options.urlBuilder?.generateSignedUploadURL
+    if (generateSignedUploadURL) {
+      debug('generating signed upload URL %s:%s', this.#rootUrl, key)
+      return generateSignedUploadURL(key, location, normalizedOptions)
+    }
+
+    throw new RuntimeException(
+      'Cannot generate signed upload URL. The "fs" driver does not support it'
+    )
+  }
+
   /**
    * Results in noop, since the local filesystem cannot have per
    * object visibility.

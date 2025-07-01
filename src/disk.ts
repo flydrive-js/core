@@ -123,6 +123,14 @@ export class Disk {
   }
 
   /**
+   * Returns a signed/temporary URL that can be used to directly upload
+   * the file contents to the storage.
+   */
+  getSignedUploadUrl(key: string, options?: SignedURLOptions): Promise<string> {
+    return this.file(key).getSignedUploadUrl(options)
+  }
+
+  /**
    * Update the visibility of the file
    */
   async setVisibility(key: string, visibility: ObjectVisibility): Promise<void> {

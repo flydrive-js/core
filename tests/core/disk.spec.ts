@@ -317,6 +317,52 @@ test.group('Disk | getSignedUrl', () => {
   })
 })
 
+test.group('Disk | getSignedUploadUrl', () => {
+  test('get file upload url from the underlying driver', async ({ fs, assert }) => {
+    const key = 'hello.txt'
+    const contents = 'Hello world'
+
+    const fdfs = new FSDriver({
+      location: fs.baseUrl,
+      visibility: 'public',
+      urlBuilder: {
+        async generateSignedUploadURL(fileKey) {
+          return `/assets/${fileKey}`
+        },
+      },
+    })
+    await fdfs.put(key, contents)
+
+    const disk = new Disk(fdfs)
+    assert.equal(await disk.getSignedUploadUrl(key), '/assets/hello.txt')
+  })
+
+  test('wrap driver errors into generic error', async ({ fs, assert }) => {
+    assert.plan(3)
+    const key = 'hello.txt'
+    const contents = 'Hello world'
+
+    const fdfs = new FSDriver({
+      location: fs.baseUrl,
+      visibility: 'public',
+    })
+    await fdfs.put(key, contents)
+
+    const disk = new Disk(fdfs)
+
+    try {
+      await disk.getSignedUploadUrl(key)
+    } catch (error) {
+      assert.instanceOf(error, errors.E_CANNOT_GENERATE_URL)
+      assert.equal(error.message, 'Cannot generate URL for file at location "hello.txt"')
+      assert.equal(
+        error.cause.message,
+        'Cannot generate signed URL. The "fs" driver does not support it'
+      )
+    }
+  })
+})
+
 test.group('Disk | put', () => {
   test('create a new file', async ({ fs, assert }) => {
     const key = 'hello.txt'

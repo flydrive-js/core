@@ -172,6 +172,18 @@ export class DriveFile {
   }
 
   /**
+   * Returns a signed/temporary URL that can be used to directly upload
+   * the file contents to the storage.
+   */
+  async getSignedUploadUrl(options?: SignedURLOptions) {
+    try {
+      return await this.#driver.getSignedUploadUrl(this.key, options)
+    } catch (error) {
+      throw new errors.E_CANNOT_GENERATE_URL([this.key], { cause: error })
+    }
+  }
+
+  /**
    * Returns a snapshot of the file. The snapshot could be persisted
    * within any database storage and later you can create a file
    * instance from it using the "disk.fromSnapshot" method.

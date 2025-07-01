@@ -458,11 +458,52 @@ export class S3Driver implements DriverContract {
     const generateSignedURL = this.options.urlBuilder?.generateSignedURL
     if (generateSignedURL) {
       debug('using custom implementation for generating signed URL %s:%s', this.options.bucket, key)
-      return generateSignedURL(key, signedURLOptions, this.#client)
+      return generateSignedURL(key, signedURLOptions, this.#client, expiresIn)
     }
 
     debug('generating signed URL %s:%s', this.options.bucket, key)
     return getSignedUrl(this.#client, this.createGetObjectCommand(this.#client, signedURLOptions), {
+      expiresIn: expires,
+    })
+  }
+
+  /**
+   * Returns a signed URL for uploading objects directly to S3.
+   */
+  async getSignedUploadUrl(key: string, options?: SignedURLOptions): Promise<string> {
+    const { contentType, expiresIn, ...rest } = Object.assign({}, options)
+
+    /**
+     * Options passed to GCS when generating the signed URL.
+     */
+    const expires = string.seconds.parse(expiresIn || '30mins')
+
+    /**
+     * Options given to the PutObjectCommand when create a signed
+     * URL
+     */
+    const signedURLOptions: PutObjectCommandInput = {
+      Key: key,
+      Bucket: this.options.bucket,
+      ContentType: contentType,
+      ...rest,
+    }
+
+    /**
+     * Use custom implementation when exists.
+     */
+    const generateSignedUploadURL = this.options.urlBuilder?.generateSignedUploadURL
+    if (generateSignedUploadURL) {
+      debug(
+        'using custom implementation for generating signed upload URL %s:%s',
+        this.options.bucket,
+        key
+      )
+      return generateSignedUploadURL(key, signedURLOptions, this.#client, expiresIn)
+    }
+
+    debug('generating signed upload URL %s:%s', this.options.bucket, key)
+    return getSignedUrl(this.#client, this.createPutObjectCommand(this.#client, signedURLOptions), {
       expiresIn: expires,
     })
   }

@@ -54,6 +54,16 @@ type GCSDriverBaseOptions = {
       config: GetSignedUrlConfig,
       storage: Storage
     ): Promise<string>
+
+    /**
+     * Custom implementation for creating signed/temporary URLs for uploading files
+     */
+    generateSignedUploadURL?(
+      key: string,
+      bucket: string,
+      config: GetSignedUrlConfig,
+      storage: Storage
+    ): Promise<string>
   }
 }
 

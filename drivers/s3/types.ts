@@ -9,6 +9,7 @@
 
 import type {
   GetObjectAclCommandInput,
+  PutObjectCommandInput,
   S3Client,
   S3ClientConfig,
   ServerSideEncryption,
@@ -63,7 +64,18 @@ type S3DriverBaseOptions = {
     generateSignedURL?(
       key: string,
       options: GetObjectAclCommandInput,
-      client: S3Client
+      client: S3Client,
+      expiresIn?: number | string
+    ): Promise<string>
+
+    /**
+     * Custom implementation for creating signed/temporary URLs for uploading files
+     */
+    generateSignedUploadURL?(
+      key: string,
+      options: PutObjectCommandInput,
+      client: S3Client,
+      expiresIn?: number | string
     ): Promise<string>
   }
 

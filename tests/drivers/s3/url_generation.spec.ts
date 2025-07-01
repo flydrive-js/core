@@ -10,7 +10,7 @@
 import got from 'got'
 import { test } from '@japa/runner'
 import string from '@poppinss/utils/string'
-import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3'
+import { GetObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3'
 
 import { S3Driver } from '../../../drivers/s3/driver.js'
 import {
@@ -202,5 +202,101 @@ test.group('S3 Driver | getSignedUrl', (group) => {
 
     const fileURL = new URL(await s3fs.getSignedUrl(key))
     assert.equal(fileURL.searchParams.get('response-cache-control'), 'no-cache')
+  })
+})
+
+test.group('S3 Driver | getSignedUploadUrl', (group) => {
+  group.each.setup(() => {
+    return async () => {
+      await deleteS3Objects(client, S3_BUCKET, '/')
+    }
+  })
+  group.each.timeout(10_000)
+
+  test('get signed upload URL of a file', async ({ assert }) => {
+    const key = `${string.random(6)}.txt`
+
+    const s3fs = new S3Driver({
+      visibility: 'private',
+      client: client,
+      bucket: S3_BUCKET,
+      supportsACL: SUPPORTS_ACL,
+    })
+
+    // await s3fs.put(key, 'hello world')
+
+    const fileURL = new URL(await s3fs.getSignedUploadUrl(key))
+    await got.put(fileURL, { body: 'hello world', headers: { 'Content-Type': 'text/plain' } })
+    const fileContents = await got.get(fileURL)
+
+    assert.include(fileURL.hostname, S3_BUCKET)
+    assert.equal(fileURL.pathname, `/${key}`)
+    assert.isTrue(fileURL.searchParams.has('X-Amz-Signature'))
+    assert.isTrue(fileURL.searchParams.has('X-Amz-Expires'))
+
+    assert.equal(fileContents.body, 'hello world')
+  })
+
+  test('define content type for the file', async ({ assert }) => {
+    const key = `${string.random(6)}.txt`
+
+    const s3fs = new S3Driver({
+      visibility: 'public',
+      client: client,
+      bucket: S3_BUCKET,
+      supportsACL: SUPPORTS_ACL,
+    })
+
+    const fileURL = new URL(
+      await s3fs.getSignedUploadUrl(key, {
+        contentType: 'image/png',
+      })
+    )
+
+    assert.equal(fileURL.searchParams.get('response-content-type'), 'image/png')
+  })
+
+  test('define content disposition for the file', async ({ assert }) => {
+    const key = `${string.random(6)}.txt`
+
+    const s3fs = new S3Driver({
+      visibility: 'public',
+      client: client,
+      bucket: S3_BUCKET,
+      supportsACL: SUPPORTS_ACL,
+    })
+
+    const fileURL = new URL(
+      await s3fs.getSignedUploadUrl(key, {
+        contentDisposition: 'attachment',
+      })
+    )
+
+    assert.equal(fileURL.searchParams.get('response-content-disposition'), 'attachment')
+  })
+
+  test('use custom implementation for generating signed upload URL', async ({ assert }) => {
+    const key = `${string.random(6)}.txt`
+
+    const s3fs = new S3Driver({
+      visibility: 'public',
+      client: client,
+      bucket: S3_BUCKET,
+      supportsACL: SUPPORTS_ACL,
+      urlBuilder: {
+        async generateSignedUploadURL(_, options, s3Client) {
+          return getSignedUrl(
+            s3Client,
+            new PutObjectCommand({
+              ...options,
+              CacheControl: 'no-cache',
+            })
+          )
+        },
+      },
+    })
+
+    const fileURL = new URL(await s3fs.getSignedUploadUrl(key))
+    assert.equal(fileURL.searchParams.get('cache-control'), 'no-cache')
   })
 })
