@@ -27,6 +27,7 @@ import type {
   DriverContract,
   SignedURLOptions,
   ObjectVisibility,
+  UploadSignedURLOptions,
 } from '../../src/types.js'
 
 /**
@@ -285,19 +286,18 @@ export class GCSDriver implements DriverContract {
    * expire in 30mins, but a custom expiry can be defined using
    * "options.expiresIn" property.
    */
-  async getSignedUploadUrl(key: string, options?: SignedURLOptions): Promise<string> {
-    const { contentDisposition, contentType, expiresIn, ...rest } = Object.assign({}, options)
+  async getSignedUploadUrl(key: string, options?: UploadSignedURLOptions): Promise<string> {
+    const { expiresIn, ...rest } = Object.assign({}, options)
+
+    const expires = new Date()
+    expires.setSeconds(new Date().getSeconds() + string.seconds.parse(expiresIn || '30mins'))
 
     /**
      * Options passed to GCS when generating the signed URL.
      */
-    const expires = new Date()
-    expires.setSeconds(new Date().getSeconds() + string.seconds.parse(expiresIn || '30mins'))
-
     const signedURLOptions: GetSignedUrlConfig = {
       action: 'write',
       expires: expires,
-      contentType,
       ...rest,
     }
 

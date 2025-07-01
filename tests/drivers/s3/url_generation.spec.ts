@@ -213,7 +213,7 @@ test.group('S3 Driver | getSignedUploadUrl', (group) => {
   })
   group.each.timeout(10_000)
 
-  test('get signed upload URL of a file', async ({ assert }) => {
+  test('upload file using the signed URL', async ({ assert }) => {
     const key = `${string.random(6)}.txt`
 
     const s3fs = new S3Driver({
@@ -223,21 +223,19 @@ test.group('S3 Driver | getSignedUploadUrl', (group) => {
       supportsACL: SUPPORTS_ACL,
     })
 
-    // await s3fs.put(key, 'hello world')
+    const uploadURL = new URL(await s3fs.getSignedUploadUrl(key))
+    await got.put(uploadURL, { body: 'hello world' })
+    const fileContents = await got.get(await s3fs.getSignedUrl(key))
 
-    const fileURL = new URL(await s3fs.getSignedUploadUrl(key))
-    await got.put(fileURL, { body: 'hello world', headers: { 'Content-Type': 'text/plain' } })
-    const fileContents = await got.get(fileURL)
-
-    assert.include(fileURL.hostname, S3_BUCKET)
-    assert.equal(fileURL.pathname, `/${key}`)
-    assert.isTrue(fileURL.searchParams.has('X-Amz-Signature'))
-    assert.isTrue(fileURL.searchParams.has('X-Amz-Expires'))
+    assert.include(uploadURL.hostname, S3_BUCKET)
+    assert.equal(uploadURL.pathname, `/${key}`)
+    assert.isTrue(uploadURL.searchParams.has('X-Amz-Signature'))
+    assert.isTrue(uploadURL.searchParams.has('X-Amz-Expires'))
 
     assert.equal(fileContents.body, 'hello world')
   })
 
-  test('define content type for the file', async ({ assert }) => {
+  test('upload file with an explicit content-type', async ({ assert }) => {
     const key = `${string.random(6)}.txt`
 
     const s3fs = new S3Driver({
@@ -247,32 +245,22 @@ test.group('S3 Driver | getSignedUploadUrl', (group) => {
       supportsACL: SUPPORTS_ACL,
     })
 
-    const fileURL = new URL(
+    const uploadURL = new URL(
       await s3fs.getSignedUploadUrl(key, {
         contentType: 'image/png',
       })
     )
 
-    assert.equal(fileURL.searchParams.get('response-content-type'), 'image/png')
-  })
+    await got.put(uploadURL, { body: 'hello world', headers: { 'Content-Type': 'image/png' } })
 
-  test('define content disposition for the file', async ({ assert }) => {
-    const key = `${string.random(6)}.txt`
-
-    const s3fs = new S3Driver({
-      visibility: 'public',
-      client: client,
-      bucket: S3_BUCKET,
-      supportsACL: SUPPORTS_ACL,
-    })
-
-    const fileURL = new URL(
-      await s3fs.getSignedUploadUrl(key, {
-        contentDisposition: 'attachment',
-      })
+    /**
+     * I would expect S3 to fail in this case. However, they do not consider
+     * content-type when generating the signature
+     */
+    await assert.doesNotReject(() => got.put(uploadURL, { body: 'hello world' }))
+    await assert.doesNotReject(() =>
+      got.put(uploadURL, { body: 'hello world', headers: { 'Content-Type': 'text/plain' } })
     )
-
-    assert.equal(fileURL.searchParams.get('response-content-disposition'), 'attachment')
   })
 
   test('use custom implementation for generating signed upload URL', async ({ assert }) => {
@@ -289,7 +277,7 @@ test.group('S3 Driver | getSignedUploadUrl', (group) => {
             s3Client,
             new PutObjectCommand({
               ...options,
-              CacheControl: 'no-cache',
+              ChecksumAlgorithm: 'SHA256',
             })
           )
         },
@@ -297,6 +285,6 @@ test.group('S3 Driver | getSignedUploadUrl', (group) => {
     })
 
     const fileURL = new URL(await s3fs.getSignedUploadUrl(key))
-    assert.equal(fileURL.searchParams.get('cache-control'), 'no-cache')
+    assert.equal(fileURL.searchParams.get('x-amz-sdk-checksum-algorithm'), 'SHA256')
   })
 })

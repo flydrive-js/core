@@ -177,7 +177,7 @@ test.group('GCS Driver | getSignedUploadUrl', (group) => {
   })
   group.each.timeout(10_000)
 
-  test('get signed upload URL of a file', async ({ assert }) => {
+  test('upload file using the signed URL', async ({ assert }) => {
     const key = `${string.random(6)}.txt`
 
     const fdgcs = new GCSDriver({
@@ -187,18 +187,18 @@ test.group('GCS Driver | getSignedUploadUrl', (group) => {
       usingUniformAcl: true,
     })
 
-    const fileURL = new URL(await fdgcs.getSignedUploadUrl(key))
-    await got.put(fileURL, { body: 'hello world', headers: { 'Content-Type': 'text/plain' } })
-    const fileContents = await got.get(fileURL)
+    const uploadURL = new URL(await fdgcs.getSignedUploadUrl(key))
+    await got.put(uploadURL, { body: 'hello world' })
+    const fileContents = await got.get(await fdgcs.getSignedUrl(key))
 
-    assert.equal(fileURL.pathname, `/${GCS_BUCKET}/${key}`)
-    assert.isTrue(fileURL.searchParams.has('Signature'))
-    assert.isTrue(fileURL.searchParams.has('Expires'))
+    assert.equal(uploadURL.pathname, `/${GCS_BUCKET}/${key}`)
+    assert.isTrue(uploadURL.searchParams.has('Signature'))
+    assert.isTrue(uploadURL.searchParams.has('Expires'))
 
     assert.equal(fileContents.body, 'hello world')
   })
 
-  test('define content type for the file', async ({ assert }) => {
+  test('upload file with an explicit content-type', async ({ assert }) => {
     const key = `${string.random(6)}.txt`
 
     const fdgcs = new GCSDriver({
@@ -208,32 +208,21 @@ test.group('GCS Driver | getSignedUploadUrl', (group) => {
       usingUniformAcl: true,
     })
 
-    const fileURL = new URL(
+    const uploadURL = new URL(
       await fdgcs.getSignedUploadUrl(key, {
         contentType: 'image/png',
       })
     )
 
-    assert.equal(fileURL.searchParams.get('response-content-type'), 'image/png')
-  })
+    await got.put(uploadURL, { body: 'hello world', headers: { 'Content-Type': 'image/png' } })
 
-  test('define content disposition for the file', async ({ assert }) => {
-    const key = `${string.random(6)}.txt`
-
-    const fdgcs = new GCSDriver({
-      visibility: 'public',
-      bucket: GCS_BUCKET,
-      credentials: GCS_KEY,
-      usingUniformAcl: true,
-    })
-
-    const fileURL = new URL(
-      await fdgcs.getSignedUploadUrl(key, {
-        contentDisposition: 'attachment',
-      })
+    /**
+     * Fails because of missing or incorrect content types
+     */
+    await assert.rejects(() => got.put(uploadURL, { body: 'hello world' }))
+    await assert.rejects(() =>
+      got.put(uploadURL, { body: 'hello world', headers: { 'Content-Type': 'text/plain' } })
     )
-
-    assert.equal(fileURL.searchParams.get('response-content-disposition'), 'attachment')
   })
 
   test('use custom implementation for generating signed upload URL', async ({ assert }) => {

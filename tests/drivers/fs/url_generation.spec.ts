@@ -36,7 +36,9 @@ test.group('FS Driver | getUrl', () => {
 
     assert.equal(await fdfs.getUrl(key), '/assets/hello.txt')
   })
+})
 
+test.group('FS Driver | getSignedUrl', () => {
   test('throw error when trying to generate a signed URL', async ({ fs, assert }) => {
     const key = 'hello.txt'
 
@@ -62,7 +64,9 @@ test.group('FS Driver | getUrl', () => {
 
     assert.equal(await fdfs.getSignedUrl(key), '/assets/hello.txt?signature=foo')
   })
+})
 
+test.group('FS Driver | getSignedUploadUrl', () => {
   test('throw error when trying to generate a signed upload URL', async ({ fs, assert }) => {
     const key = 'hello.txt'
 

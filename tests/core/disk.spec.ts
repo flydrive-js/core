@@ -357,7 +357,7 @@ test.group('Disk | getSignedUploadUrl', () => {
       assert.equal(error.message, 'Cannot generate URL for file at location "hello.txt"')
       assert.equal(
         error.cause.message,
-        'Cannot generate signed URL. The "fs" driver does not support it'
+        'Cannot generate signed upload URL. The "fs" driver does not support it'
       )
     }
   })

@@ -54,6 +54,18 @@ export type SignedURLOptions = {
 }
 
 /**
+ * Options accepted during the creation of a signed URL
+ * to upload files
+ */
+export type UploadSignedURLOptions = {
+  expiresIn?: string | number
+  contentType?: string
+  contentSize?: number
+} & {
+  [key: string]: any
+}
+
+/**
  * Representation of file snapshot. It can be persisted
  * inside any database storage.
  */

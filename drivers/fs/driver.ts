@@ -224,6 +224,11 @@ export class FSDriver implements DriverContract {
     throw new RuntimeException('Cannot generate signed URL. The "fs" driver does not support it')
   }
 
+  /**
+   * Returns the signed/temporary URL that can be used to directly upload the file.
+   * By default, the signed URLs expire in 30mins, but a custom expiry can be
+   * defined using "options.expiresIn" property.
+   */
   async getSignedUploadUrl(key: string, options?: SignedURLOptions): Promise<string> {
     const location = join(this.#rootUrl, key)
     const normalizedOptions = Object.assign(
@@ -242,6 +247,9 @@ export class FSDriver implements DriverContract {
       return generateSignedUploadURL(key, location, normalizedOptions)
     }
 
+    /**
+     * Not supported by default
+     */
     throw new RuntimeException(
       'Cannot generate signed upload URL. The "fs" driver does not support it'
     )
