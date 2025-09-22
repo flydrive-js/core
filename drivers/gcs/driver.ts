@@ -509,4 +509,11 @@ export class GCSDriver implements DriverContract {
       },
     }
   }
+
+  /**
+   * Switch bucket at runtime if supported.
+   */
+  bucket(bucket: string): GCSDriver {
+    return new GCSDriver({ ...this.options, bucket })
+  }
 }

@@ -190,6 +190,11 @@ export interface DriverContract {
     paginationToken?: string
     objects: Iterable<DriveFile | DriveDirectory>
   }>
+
+  /**
+   * Switch bucket at runtime if supported.
+   */
+  bucket(bucket: string): DriverContract
 }
 
 /**

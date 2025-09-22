@@ -713,4 +713,11 @@ export class S3Driver implements DriverContract {
       },
     }
   }
+
+  /**
+   * Switch bucket at runtime if supported.
+   */
+  bucket(bucket: string): S3Driver {
+    return new S3Driver({ ...this.options, bucket })
+  }
 }

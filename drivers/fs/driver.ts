@@ -410,4 +410,11 @@ export class FSDriver implements DriverContract {
       },
     }
   }
+
+  /**
+   * Switch bucket at runtime if supported.
+   */
+  bucket(_bucket: string): FSDriver {
+    throw new RuntimeException('Cannot switch bucket. The "fs" driver does not support it.')
+  }
 }
