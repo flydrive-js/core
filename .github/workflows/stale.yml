@@ -13,5 +13,7 @@ jobs:
           stale-pr-message: 'This pull request has been marked as stale because it has been inactive for more than 21 days. Please reopen if you still intend to submit this pull request'
           close-issue-message: 'This issue has been automatically closed because it has been inactive for more than 4 weeks. Please reopen if you still need help on this issue'
           close-pr-message: 'This pull request has been automatically closed because it has been inactive for more than 4 weeks. Please reopen if you still intend to submit this pull request'
+          exempt-issue-labels: 'Status: On Hold'
+          exempt-pr-labels: 'Status: On Hold'
           days-before-stale: 21
           days-before-close: 5
