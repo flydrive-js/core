@@ -7,7 +7,7 @@
  * file that was distributed with this source code.
  */
 
-import { ObjectVisibility, SignedURLOptions } from '../../src/types.js'
+import { type ObjectVisibility, type SignedURLOptions } from '../../src/types.js'
 
 /**
  * The options accepted by the FSDriver

@@ -8,7 +8,7 @@
  */
 
 import { basename } from 'node:path'
-import { Readable } from 'node:stream'
+import { type Readable } from 'node:stream'
 
 import * as errors from './errors.js'
 import { KeyNormalizer } from './key_normalizer.js'

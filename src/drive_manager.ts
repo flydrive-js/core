@@ -7,12 +7,12 @@
  * file that was distributed with this source code.
  */
 
-import { RuntimeException } from '@poppinss/utils'
+import { RuntimeException } from '@poppinss/utils/exception'
 
 import debug from './debug.js'
 import { Disk } from './disk.js'
 import { FakeDisk } from './fake_disk.js'
-import { DriveManagerOptions, DriverContract } from './types.js'
+import { type DriveManagerOptions, type DriverContract } from './types.js'
 
 /**
  * Drive manager exposes the API to manage Disk instances for multiple

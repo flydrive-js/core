@@ -7,7 +7,7 @@
  * file that was distributed with this source code.
  */
 
-import { DeleteObjectsCommand, ListObjectsV2Command, S3Client } from '@aws-sdk/client-s3'
+import { DeleteObjectsCommand, ListObjectsV2Command, type S3Client } from '@aws-sdk/client-s3'
 
 /**
  * Delete S3 Objects

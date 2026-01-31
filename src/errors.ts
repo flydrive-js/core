@@ -7,7 +7,7 @@
  * file that was distributed with this source code.
  */
 
-import { createError } from '@poppinss/utils'
+import { createError } from '@poppinss/utils/exception'
 
 /**
  * Unable to write file to the destination

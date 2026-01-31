@@ -14,7 +14,7 @@ import type { Readable } from 'node:stream'
 import * as errors from './errors.js'
 import { DriveFile } from './driver_file.js'
 import { KeyNormalizer } from './key_normalizer.js'
-import { DriveDirectory } from './drive_directory.js'
+import { type DriveDirectory } from './drive_directory.js'
 import type {
   WriteOptions,
   FileSnapshot,

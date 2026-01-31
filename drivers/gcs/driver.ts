@@ -11,10 +11,10 @@ import { type Readable } from 'node:stream'
 import string from '@poppinss/utils/string'
 import {
   Storage,
-  SaveOptions,
-  FileMetadata,
-  GetFilesOptions,
-  GetSignedUrlConfig,
+  type SaveOptions,
+  type FileMetadata,
+  type GetFilesOptions,
+  type GetSignedUrlConfig,
 } from '@google-cloud/storage'
 
 import debug from './debug.js'

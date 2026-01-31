@@ -8,11 +8,6 @@
  */
 
 import { Env } from '@adonisjs/env'
-import { readFile } from 'node:fs/promises'
-
-Env.defineIdentifier('file', (value) => {
-  return readFile(new URL(`../../../${value}`, import.meta.url), 'utf-8')
-})
 
 const env = await Env.create(new URL('../../../', import.meta.url), {
   GCS_KEY: Env.schema.string(),

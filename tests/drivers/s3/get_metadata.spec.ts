@@ -76,6 +76,6 @@ test.group('S3 Driver | getMetaData', (group) => {
 
     await assert.rejects(async () => {
       await s3fs.getMetaData(key)
-    }, /UnknownError/)
+    }, /Unknown/)
   })
 })

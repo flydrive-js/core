@@ -8,12 +8,12 @@
  */
 
 import mimeTypes from 'mime-types'
-import { Readable } from 'node:stream'
+import { type Readable } from 'node:stream'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 import {
   S3Client,
   PutObjectCommand,
-  HeadObjectOutput,
+  type HeadObjectOutput,
   GetObjectCommand,
   HeadObjectCommand,
   CopyObjectCommand,
@@ -22,19 +22,19 @@ import {
   GetObjectAclCommand,
   ListObjectsV2Command,
   DeleteObjectsCommand,
-  PutObjectCommandInput,
-  GetObjectCommandInput,
-  CopyObjectCommandInput,
-  HeadObjectCommandInput,
-  GetObjectAclCommandInput,
-  PutObjectAclCommandInput,
-  DeleteObjectCommandInput,
-  ListObjectsV2CommandInput,
-  DeleteObjectsCommandInput,
+  type PutObjectCommandInput,
+  type GetObjectCommandInput,
+  type CopyObjectCommandInput,
+  type HeadObjectCommandInput,
+  type GetObjectAclCommandInput,
+  type PutObjectAclCommandInput,
+  type DeleteObjectCommandInput,
+  type ListObjectsV2CommandInput,
+  type DeleteObjectsCommandInput,
 } from '@aws-sdk/client-s3'
 
 import debug from './debug.js'
-import { S3DriverOptions } from './types.js'
+import { type S3DriverOptions } from './types.js'
 import { DriveFile } from '../../src/driver_file.js'
 import { DriveDirectory } from '../../src/drive_directory.js'
 import type {

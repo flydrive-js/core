@@ -9,14 +9,14 @@
 
 import etag from 'etag'
 import mimeTypes from 'mime-types'
-import { Readable } from 'node:stream'
-import { slash } from '@poppinss/utils'
 import * as fsp from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
+import { type Readable } from 'node:stream'
+import string from '@poppinss/utils/string'
 import { Retrier } from '@humanwhocodes/retry'
-import { RuntimeException } from '@poppinss/utils'
 import { dirname, join, relative } from 'node:path'
-import { existsSync, rmSync, createReadStream, Dirent } from 'node:fs'
+import { RuntimeException } from '@poppinss/utils/exception'
+import { existsSync, rmSync, createReadStream, type Dirent } from 'node:fs'
 
 import debug from './debug.js'
 import type { FSDriverOptions } from './types.js'
@@ -392,8 +392,11 @@ export class FSDriver implements DriverContract {
       DriveFile | { isFile: false; isDirectory: true; prefix: string; name: string }
     > {
       for (const file of files) {
-        const relativeName = slash(
-          relative(self.#rootUrl, join(file.parentPath ?? file.path, file.name))
+        const relativeName = string.toUnixSlash(
+          relative(
+            self.#rootUrl,
+            join(file.parentPath ?? ('path' in file ? file.path : ''), file.name)
+          )
         )
         if (file.isFile()) {
           yield new DriveFile(relativeName, self)

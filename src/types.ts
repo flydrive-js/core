@@ -7,9 +7,9 @@
  * file that was distributed with this source code.
  */
 
-import { Readable } from 'node:stream'
-import { DriveFile } from './driver_file.js'
-import { DriveDirectory } from './drive_directory.js'
+import { type Readable } from 'node:stream'
+import { type DriveFile } from './driver_file.js'
+import { type DriveDirectory } from './drive_directory.js'
 
 /**
  * The visibility of the object.

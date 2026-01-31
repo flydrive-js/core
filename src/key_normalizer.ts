@@ -7,7 +7,6 @@
  * file that was distributed with this source code.
  */
 
-import { slash } from '@poppinss/utils'
 import { normalize } from 'node:path/posix'
 import string from '@poppinss/utils/string'
 
@@ -43,7 +42,8 @@ export class KeyNormalizer {
      * - Remove consecutive '/'
      * - Remove more than two dots + slash "..../" to "../"
      */
-    return slash(normalizedKey)
+    return string
+      .toUnixSlash(normalizedKey)
       .replace(/\/{2,}/g, '/')
       .replace(/\.{3,}\//g, '../')
   }
