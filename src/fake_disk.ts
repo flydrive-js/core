@@ -20,6 +20,7 @@ import type { DriveManagerOptions } from './types.js'
  */
 export class FakeDisk extends Disk {
   declare driver: FSDriver
+  #restoreFn: (() => void) | undefined
 
   constructor(
     public disk: string,
@@ -35,6 +36,18 @@ export class FakeDisk extends Disk {
         urlBuilder: fakesConfig.urlBuilder,
       })
     )
+  }
+
+  /**
+   * Set the function to call when the fake is disposed
+   */
+  onRestore(fn: () => void) {
+    this.#restoreFn = fn
+    return this
+  }
+
+  [Symbol.dispose]() {
+    this.#restoreFn?.()
   }
 
   /**

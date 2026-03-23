@@ -180,6 +180,35 @@ test.group('Drive Manager', () => {
     assert.notStrictEqual(fake, drive.use())
   })
 
+  test('Symbol.dispose restores the fake', async ({ fs, assert }) => {
+    const drive = new DriveManager({
+      default: 'fs',
+      services: {
+        fs: () => new FSDriver({ location: fs.baseUrl, visibility: 'public' }),
+        gcs: () =>
+          new GCSDriver({
+            visibility: 'public',
+            bucket: GCS_BUCKET,
+            credentials: GCS_KEY,
+            usingUniformAcl: true,
+          }),
+      },
+      fakes: {
+        location: fs.baseUrl,
+      },
+    })
+
+    {
+      using fake = drive.fake('gcs')
+      assert.instanceOf(fake, FakeDisk)
+      assert.strictEqual(drive.use('gcs'), fake)
+      await drive.use('gcs').put('hello.txt', 'Hello world')
+      fake.assertExists('hello.txt')
+    }
+
+    assert.notInstanceOf(drive.use('gcs'), FakeDisk)
+  })
+
   test('use fakes assertions', async ({ fs, assert }) => {
     const drive = new DriveManager({
       default: 'fs',

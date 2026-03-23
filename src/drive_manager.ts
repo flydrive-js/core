@@ -102,6 +102,7 @@ export class DriveManager<Services extends Record<string, () => DriverContract>>
      * Create new fake
      */
     const fake = new FakeDisk(serviceToUse as string, this.#config.fakes)
+    fake.onRestore(() => this.restore(serviceToUse))
     this.#fakes.set(serviceToUse, fake)
     return fake
   }
