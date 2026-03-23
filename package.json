@@ -1,7 +1,7 @@
 {
   "name": "flydrive",
   "description": "File storage library with unified API to manage files across multiple cloud storage providers like S3, GCS, R2 and so on",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "engines": {
     "node": ">=24.0.0"
   },
