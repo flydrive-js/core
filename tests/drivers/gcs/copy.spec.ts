@@ -109,4 +109,23 @@ test.group('GCS Driver | copy', (group) => {
     const existsResponse = await noUniformedAclBucket.file(source).exists()
     assert.isTrue(existsResponse[0])
   })
+
+  test('copy file with explicit bucket option', async ({ assert }) => {
+    const source = `${string.random(6)}.txt`
+    const destination = `${string.random(6)}.txt`
+    const contents = 'Hello world'
+
+    const fdgcs = new GCSDriver({
+      visibility: 'public',
+      bucket: GCS_BUCKET,
+      credentials: GCS_KEY,
+      usingUniformAcl: true,
+    })
+    await fdgcs.put(source, contents)
+    await fdgcs.copy(source, destination, { bucket: GCS_BUCKET })
+
+    assert.equal(await fdgcs.get(destination), contents)
+    const [exists] = await bucket.file(source).exists()
+    assert.isTrue(exists)
+  })
 })

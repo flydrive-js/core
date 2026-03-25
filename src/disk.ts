@@ -22,6 +22,7 @@ import type {
   DriverContract,
   ObjectVisibility,
   SignedURLOptions,
+  CopyMoveOptions,
 } from './types.js'
 
 /**
@@ -169,13 +170,13 @@ export class Disk {
   }
 
   /**
-   * Copies file from the "source" to the "destination" within the
-   * same bucket or the root location of local filesystem.
+   * Copies file from the "source" to the "destination". Use the "bucket"
+   * option to copy the file to a different bucket.
    *
    * Use "copyFromFs" method to copy files from local filesystem to
    * a cloud provider
    */
-  async copy(source: string, destination: string, options?: WriteOptions): Promise<void> {
+  async copy(source: string, destination: string, options?: CopyMoveOptions): Promise<void> {
     source = this.#normalizer.normalize(source)
     destination = this.#normalizer.normalize(destination)
     try {
@@ -193,13 +194,13 @@ export class Disk {
   }
 
   /**
-   * Moves file from the "source" to the "destination" within the
-   * same bucket or the root location of local filesystem.
+   * Moves file from the "source" to the "destination". Use the "bucket"
+   * option to move the file to a different bucket.
    *
    * Use "moveFromFs" method to move files from local filesystem to
    * a cloud provider
    */
-  async move(source: string, destination: string, options?: WriteOptions): Promise<void> {
+  async move(source: string, destination: string, options?: CopyMoveOptions): Promise<void> {
     source = this.#normalizer.normalize(source)
     destination = this.#normalizer.normalize(destination)
     try {

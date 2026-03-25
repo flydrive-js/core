@@ -9,7 +9,7 @@
 
 import { test } from '@japa/runner'
 import string from '@poppinss/utils/string'
-import { S3Client } from '@aws-sdk/client-s3'
+import { S3Client, type CopyObjectCommandInput } from '@aws-sdk/client-s3'
 
 import { S3Driver } from '../../../drivers/s3/driver.js'
 import {
@@ -136,4 +136,51 @@ test.group('S3 Driver | copy', (group) => {
 
     assert.isTrue(await s3fs.exists(source))
   }).skip(!SUPPORTS_ACL, 'Service does not support ACL. Hence, we cannot control file visibility')
+
+  test('copy file with explicit bucket option', async ({ assert }) => {
+    const source = `${string.random(6)}.txt`
+    const destination = `${string.random(6)}.txt`
+    const contents = 'Hello world'
+
+    const s3fs = new S3Driver({
+      visibility: 'public',
+      client: client,
+      bucket: S3_BUCKET,
+      supportsACL: SUPPORTS_ACL,
+    })
+    await s3fs.put(source, contents)
+    await s3fs.copy(source, destination, { bucket: S3_BUCKET })
+
+    assert.equal(await s3fs.get(destination), contents)
+    assert.isTrue(await s3fs.exists(source))
+  })
+
+  test('copy command receives the correct destination bucket', async ({ assert }) => {
+    let capturedOptions: CopyObjectCommandInput | undefined
+
+    class TestS3Driver extends S3Driver {
+      protected createCopyObjectCommand(_client: S3Client, options: CopyObjectCommandInput) {
+        capturedOptions = options
+        return super.createCopyObjectCommand(_client, options)
+      }
+    }
+
+    const source = `${string.random(6)}.txt`
+    const destination = `${string.random(6)}.txt`
+    const contents = 'Hello world'
+
+    const s3fs = new TestS3Driver({
+      visibility: 'public',
+      client: client,
+      bucket: S3_BUCKET,
+      supportsACL: SUPPORTS_ACL,
+    })
+
+    await s3fs.put(source, contents)
+    await s3fs.copy(source, destination, { bucket: 'other-bucket' }).catch(() => {})
+
+    assert.isDefined(capturedOptions)
+    assert.equal(capturedOptions!.Bucket, 'other-bucket')
+    assert.equal(capturedOptions!.CopySource, `/${S3_BUCKET}/${source}`)
+  })
 })
