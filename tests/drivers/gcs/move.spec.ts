@@ -10,7 +10,7 @@
 import { test } from '@japa/runner'
 import string from '@poppinss/utils/string'
 import { Storage } from '@google-cloud/storage'
-import { GCS_BUCKET, GCS_FINE_GRAINED_ACL_BUCKET, GCS_KEY } from './env.js'
+import { GCS_BUCKET, GCS_FINE_GRAINED_ACL_BUCKET, GCS_KEY, GCS_OTHER_BUCKET } from './env.js'
 import { GCSDriver } from '../../../drivers/gcs/driver.js'
 
 /**
@@ -20,6 +20,9 @@ import { GCSDriver } from '../../../drivers/gcs/driver.js'
 const bucket = new Storage({
   credentials: GCS_KEY,
 }).bucket(GCS_BUCKET)
+const otherBucket = new Storage({
+  credentials: GCS_KEY,
+}).bucket(GCS_OTHER_BUCKET)
 const noUniformedAclBucket = new Storage({
   credentials: GCS_KEY,
 }).bucket(GCS_FINE_GRAINED_ACL_BUCKET)
@@ -28,6 +31,7 @@ test.group('GCS Driver | move', (group) => {
   group.each.setup(() => {
     return async () => {
       await bucket.deleteFiles()
+      await otherBucket.deleteFiles()
       await noUniformedAclBucket.deleteFiles()
     }
   })
@@ -132,5 +136,35 @@ test.group('GCS Driver | move', (group) => {
     assert.equal(await fdgcs.get(destination), contents)
     const [exists] = await bucket.file(source).exists()
     assert.isFalse(exists)
+  })
+
+  test('move file to another bucket with explicit bucket option', async ({ assert }) => {
+    const source = `${string.random(10)}.txt`
+    const destination = `${string.random(10)}.txt`
+    const contents = 'Hello world'
+
+    const sourceDriver = new GCSDriver({
+      visibility: 'public',
+      bucket: GCS_BUCKET,
+      credentials: GCS_KEY,
+      usingUniformAcl: true,
+    })
+    const destinationDriver = new GCSDriver({
+      visibility: 'public',
+      bucket: GCS_OTHER_BUCKET,
+      credentials: GCS_KEY,
+      usingUniformAcl: true,
+    })
+
+    await sourceDriver.put(source, contents)
+    await sourceDriver.move(source, destination, { destinationBucket: GCS_OTHER_BUCKET })
+
+    assert.equal(await destinationDriver.get(destination), contents)
+
+    const [sourceExists] = await bucket.file(source).exists()
+    const [destinationExists] = await otherBucket.file(destination).exists()
+
+    assert.isFalse(sourceExists)
+    assert.isTrue(destinationExists)
   })
 })
