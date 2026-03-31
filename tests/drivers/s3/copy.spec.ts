@@ -16,9 +16,10 @@ import {
   S3_REGION,
   S3_BUCKET,
   S3_ENDPOINT,
+  SUPPORTS_ACL,
   AWS_ACCESS_KEY,
   AWS_ACCESS_SECRET,
-  SUPPORTS_ACL,
+  S3_OTHER_BUCKET,
 } from './env.js'
 import { deleteS3Objects } from '../../helpers.js'
 
@@ -177,10 +178,10 @@ test.group('S3 Driver | copy', (group) => {
     })
 
     await s3fs.put(source, contents)
-    await s3fs.copy(source, destination, { destinationBucket: 'flydrive-other-bucket' })
+    await s3fs.copy(source, destination, { destinationBucket: S3_OTHER_BUCKET })
 
     assert.isDefined(capturedOptions)
-    assert.equal(capturedOptions!.Bucket, 'flydrive-other-bucket')
+    assert.equal(capturedOptions!.Bucket, S3_OTHER_BUCKET)
     assert.equal(capturedOptions!.CopySource, `/${S3_BUCKET}/${source}`)
-  })
+  }).pin()
 })

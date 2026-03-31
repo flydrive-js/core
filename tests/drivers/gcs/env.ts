@@ -12,9 +12,11 @@ import { Env } from '@adonisjs/env'
 const env = await Env.create(new URL('../../../', import.meta.url), {
   GCS_KEY: Env.schema.string(),
   GCS_BUCKET: Env.schema.string(),
+  GCS_OTHER_BUCKET: Env.schema.string(),
   GCS_FINE_GRAINED_ACL_BUCKET: Env.schema.string(),
 })
 
 export const GCS_BUCKET = env.get('GCS_BUCKET')
+export const GCS_OTHER_BUCKET = env.get('GCS_OTHER_BUCKET')
 export const GCS_KEY = JSON.parse(env.get('GCS_KEY'))
 export const GCS_FINE_GRAINED_ACL_BUCKET = env.get('GCS_FINE_GRAINED_ACL_BUCKET')
