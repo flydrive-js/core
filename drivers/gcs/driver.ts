@@ -383,10 +383,10 @@ export class GCSDriver implements DriverContract {
    * Copies the source file to the destination. Both paths must
    * be within the root location.
    *
-   * Use the "bucket" option to copy the file to a different bucket.
+   * Use the "destinationBucket" option to copy the file to a different bucket.
    */
   async copy(source: string, destination: string, options?: CopyMoveOptions): Promise<void> {
-    const { bucket: destinationBucket, ...writeOptions } = options || {}
+    const { destinationBucket, ...writeOptions } = options || {}
     const targetBucket = destinationBucket || this.options.bucket
 
     debug(
@@ -420,10 +420,10 @@ export class GCSDriver implements DriverContract {
    * Moves the source file to the destination. Both paths must
    * be within the root location.
    *
-   * Use the "bucket" option to move the file to a different bucket.
+   * Use the "destinationBucket" option to move the file to a different bucket.
    */
   async move(source: string, destination: string, options?: CopyMoveOptions): Promise<void> {
-    const { bucket: destinationBucket, ...writeOptions } = options || {}
+    const { destinationBucket, ...writeOptions } = options || {}
     const targetBucket = destinationBucket || this.options.bucket
 
     debug('moving file from %s:%s to %s:%s', this.options.bucket, source, targetBucket, destination)

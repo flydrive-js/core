@@ -122,7 +122,7 @@ test.group('GCS Driver | copy', (group) => {
       usingUniformAcl: true,
     })
     await fdgcs.put(source, contents)
-    await fdgcs.copy(source, destination, { bucket: GCS_BUCKET })
+    await fdgcs.copy(source, destination, { destinationBucket: GCS_BUCKET })
 
     assert.equal(await fdgcs.get(destination), contents)
     const [exists] = await bucket.file(source).exists()

@@ -151,7 +151,7 @@ test.group('S3 Driver | move', (group) => {
       supportsACL: SUPPORTS_ACL,
     })
     await s3fs.put(source, contents)
-    await s3fs.move(source, destination, { bucket: S3_BUCKET })
+    await s3fs.move(source, destination, { destinationBucket: S3_BUCKET })
 
     assert.equal(await s3fs.get(destination), contents)
     assert.isFalse(await s3fs.exists(source))
@@ -179,10 +179,10 @@ test.group('S3 Driver | move', (group) => {
     })
 
     await s3fs.put(source, contents)
-    await s3fs.move(source, destination, { bucket: 'other-bucket' }).catch(() => {})
+    await s3fs.move(source, destination, { destinationBucket: 'flydrive-other-bucket' })
 
     assert.isDefined(capturedOptions)
-    assert.equal(capturedOptions!.Bucket, 'other-bucket')
+    assert.equal(capturedOptions!.Bucket, 'flydrive-other-bucket')
     assert.equal(capturedOptions!.CopySource, `/${S3_BUCKET}/${source}`)
   })
 })

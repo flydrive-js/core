@@ -46,7 +46,7 @@ export type WriteOptions = {
  * Options accepted by the copy and move operations.
  */
 export type CopyMoveOptions = WriteOptions & {
-  bucket?: string
+  destinationBucket?: string
 }
 
 /**
@@ -163,7 +163,7 @@ export interface DriverContract {
    * the "source" and "destination" will be the key names
    * and not absolute paths.
    *
-   * Use the "bucket" option to copy the file to a different bucket.
+   * Use the "destinationBucket" option to copy the file to a different bucket.
    */
   copy(source: string, destination: string, options?: CopyMoveOptions): Promise<void>
 
@@ -172,7 +172,7 @@ export interface DriverContract {
    * the "source" and "destination" will be the key names
    * and not absolute paths.
    *
-   * Use the "bucket" option to move the file to a different bucket.
+   * Use the "destinationBucket" option to move the file to a different bucket.
    */
   move(source: string, destination: string, options?: CopyMoveOptions): Promise<void>
 

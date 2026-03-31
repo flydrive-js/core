@@ -170,7 +170,7 @@ export class Disk {
   }
 
   /**
-   * Copies file from the "source" to the "destination". Use the "bucket"
+   * Copies file from the "source" to the "destination". Use the "destinationBucket"
    * option to copy the file to a different bucket.
    *
    * Use "copyFromFs" method to copy files from local filesystem to
@@ -194,7 +194,7 @@ export class Disk {
   }
 
   /**
-   * Moves file from the "source" to the "destination". Use the "bucket"
+   * Moves file from the "source" to the "destination". Use the "destinationBucket"
    * option to move the file to a different bucket.
    *
    * Use "moveFromFs" method to move files from local filesystem to
