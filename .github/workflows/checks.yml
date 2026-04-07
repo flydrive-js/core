@@ -45,6 +45,7 @@ jobs:
         env:
           GCS_KEY: ${{ secrets.GCS_KEY }}
           GCS_BUCKET: drive-gcs
+          GCS_OTHER_BUCKET: flydrive-other-bucket
           GCS_FINE_GRAINED_ACL_BUCKET: drive-gcs-no-uniform-acl
   tests-gcs:
     runs-on: ${{ matrix.os }}
