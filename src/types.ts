@@ -43,6 +43,13 @@ export type WriteOptions = {
 }
 
 /**
+ * Options accepted by the copy and move operations.
+ */
+export type CopyMoveOptions = WriteOptions & {
+  destinationBucket?: string
+}
+
+/**
  * Options accepted during the creation of a signed URL.
  */
 export type SignedURLOptions = {
@@ -155,15 +162,19 @@ export interface DriverContract {
    * Copy the file from within the disk root location. Both
    * the "source" and "destination" will be the key names
    * and not absolute paths.
+   *
+   * Use the "destinationBucket" option to copy the file to a different bucket.
    */
-  copy(source: string, destination: string, options?: WriteOptions): Promise<void>
+  copy(source: string, destination: string, options?: CopyMoveOptions): Promise<void>
 
   /**
    * Move the file from within the disk root location. Both
    * the "source" and "destination" will be the key names
    * and not absolute paths.
+   *
+   * Use the "destinationBucket" option to move the file to a different bucket.
    */
-  move(source: string, destination: string, options?: WriteOptions): Promise<void>
+  move(source: string, destination: string, options?: CopyMoveOptions): Promise<void>
 
   /**
    * Delete the file for the given key. Should not throw

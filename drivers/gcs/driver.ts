@@ -23,6 +23,7 @@ import { DriveFile } from '../../src/driver_file.js'
 import { DriveDirectory } from '../../src/drive_directory.js'
 import type {
   WriteOptions,
+  CopyMoveOptions,
   ObjectMetaData,
   DriverContract,
   SignedURLOptions,
@@ -381,58 +382,69 @@ export class GCSDriver implements DriverContract {
   /**
    * Copies the source file to the destination. Both paths must
    * be within the root location.
+   *
+   * Use the "destinationBucket" option to copy the file to a different bucket.
    */
-  async copy(source: string, destination: string, options?: WriteOptions): Promise<void> {
+  async copy(source: string, destination: string, options?: CopyMoveOptions): Promise<void> {
+    const { destinationBucket, ...writeOptions } = options || {}
+    const targetBucket = destinationBucket || this.options.bucket
+
     debug(
       'copying file from %s:%s to %s:%s',
       this.options.bucket,
       source,
-      this.options.bucket,
+      targetBucket,
       destination
     )
-    const bucket = this.#storage.bucket(this.options.bucket)
-    options = options || {}
+
+    const sourceBucket = this.#storage.bucket(this.options.bucket)
 
     /**
      * Copy visibility from the source file to the
      * desintation when no inline visibility is
      * defined and not using usingUniformAcl
      */
-    if (!options.visibility && !this.#usingUniformAcl) {
-      const [isFilePublic] = await bucket.file(source).isPublic()
-      options.visibility = isFilePublic ? 'public' : 'private'
+    if (!writeOptions.visibility && !this.#usingUniformAcl) {
+      const [isFilePublic] = await sourceBucket.file(source).isPublic()
+      writeOptions.visibility = isFilePublic ? 'public' : 'private'
     }
 
-    await bucket.file(source).copy(destination, this.#getSaveOptions(options))
+    const target = destinationBucket
+      ? this.#storage.bucket(destinationBucket).file(destination)
+      : destination
+
+    await sourceBucket.file(source).copy(target, this.#getSaveOptions(writeOptions))
   }
 
   /**
    * Moves the source file to the destination. Both paths must
    * be within the root location.
+   *
+   * Use the "destinationBucket" option to move the file to a different bucket.
    */
-  async move(source: string, destination: string, options?: WriteOptions): Promise<void> {
-    debug(
-      'moving file from %s:%s to %s:%s',
-      this.options.bucket,
-      source,
-      this.options.bucket,
-      destination
-    )
+  async move(source: string, destination: string, options?: CopyMoveOptions): Promise<void> {
+    const { destinationBucket, ...writeOptions } = options || {}
+    const targetBucket = destinationBucket || this.options.bucket
 
-    const bucket = this.#storage.bucket(this.options.bucket)
-    options = options || {}
+    debug('moving file from %s:%s to %s:%s', this.options.bucket, source, targetBucket, destination)
+
+    const sourceBucket = this.#storage.bucket(this.options.bucket)
 
     /**
      * Copy visibility from the source file to the
      * desintation when no inline visibility is
      * defined and not using usingUniformAcl
      */
-    if (!options.visibility && !this.#usingUniformAcl) {
-      const [isFilePublic] = await bucket.file(source).isPublic()
-      options.visibility = isFilePublic ? 'public' : 'private'
+    if (!writeOptions.visibility && !this.#usingUniformAcl) {
+      const [isFilePublic] = await sourceBucket.file(source).isPublic()
+      writeOptions.visibility = isFilePublic ? 'public' : 'private'
     }
 
-    await bucket.file(source).move(destination, this.#getSaveOptions(options))
+    const target = destinationBucket
+      ? this.#storage.bucket(destinationBucket).file(destination)
+      : destination
+
+    await sourceBucket.file(source).move(target, this.#getSaveOptions(writeOptions))
   }
 
   /**

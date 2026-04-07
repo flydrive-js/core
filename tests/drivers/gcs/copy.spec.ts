@@ -11,7 +11,7 @@ import { test } from '@japa/runner'
 import string from '@poppinss/utils/string'
 import { Storage } from '@google-cloud/storage'
 import { GCSDriver } from '../../../drivers/gcs/driver.js'
-import { GCS_BUCKET, GCS_FINE_GRAINED_ACL_BUCKET, GCS_KEY } from './env.js'
+import { GCS_BUCKET, GCS_FINE_GRAINED_ACL_BUCKET, GCS_KEY, GCS_OTHER_BUCKET } from './env.js'
 
 /**
  * Direct access to Google cloud storage bucket
@@ -20,6 +20,9 @@ import { GCS_BUCKET, GCS_FINE_GRAINED_ACL_BUCKET, GCS_KEY } from './env.js'
 const bucket = new Storage({
   credentials: GCS_KEY,
 }).bucket(GCS_BUCKET)
+const otherBucket = new Storage({
+  credentials: GCS_KEY,
+}).bucket(GCS_OTHER_BUCKET)
 const noUniformedAclBucket = new Storage({
   credentials: GCS_KEY,
 }).bucket(GCS_FINE_GRAINED_ACL_BUCKET)
@@ -28,6 +31,7 @@ test.group('GCS Driver | copy', (group) => {
   group.each.setup(() => {
     return async () => {
       await bucket.deleteFiles()
+      await otherBucket.deleteFiles()
       await noUniformedAclBucket.deleteFiles()
     }
   })
@@ -108,5 +112,54 @@ test.group('GCS Driver | copy', (group) => {
 
     const existsResponse = await noUniformedAclBucket.file(source).exists()
     assert.isTrue(existsResponse[0])
+  })
+
+  test('copy file with explicit bucket option', async ({ assert }) => {
+    const source = `${string.random(6)}.txt`
+    const destination = `${string.random(6)}.txt`
+    const contents = 'Hello world'
+
+    const fdgcs = new GCSDriver({
+      visibility: 'public',
+      bucket: GCS_BUCKET,
+      credentials: GCS_KEY,
+      usingUniformAcl: true,
+    })
+    await fdgcs.put(source, contents)
+    await fdgcs.copy(source, destination, { destinationBucket: GCS_BUCKET })
+
+    assert.equal(await fdgcs.get(destination), contents)
+    const [exists] = await bucket.file(source).exists()
+    assert.isTrue(exists)
+  })
+
+  test('copy file to another bucket with explicit bucket option', async ({ assert }) => {
+    const source = `${string.random(6)}.txt`
+    const destination = `${string.random(6)}.txt`
+    const contents = 'Hello world'
+
+    const sourceDriver = new GCSDriver({
+      visibility: 'public',
+      bucket: GCS_BUCKET,
+      credentials: GCS_KEY,
+      usingUniformAcl: true,
+    })
+    const destinationDriver = new GCSDriver({
+      visibility: 'public',
+      bucket: GCS_OTHER_BUCKET,
+      credentials: GCS_KEY,
+      usingUniformAcl: true,
+    })
+
+    await sourceDriver.put(source, contents)
+    await sourceDriver.copy(source, destination, { destinationBucket: GCS_OTHER_BUCKET })
+
+    assert.equal(await destinationDriver.get(destination), contents)
+
+    const [sourceExists] = await bucket.file(source).exists()
+    const [destinationExists] = await otherBucket.file(destination).exists()
+
+    assert.isTrue(sourceExists)
+    assert.isTrue(destinationExists)
   })
 })

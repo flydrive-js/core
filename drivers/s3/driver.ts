@@ -39,6 +39,7 @@ import { DriveFile } from '../../src/driver_file.js'
 import { DriveDirectory } from '../../src/drive_directory.js'
 import type {
   WriteOptions,
+  CopyMoveOptions,
   DriverContract,
   ObjectMetaData,
   ObjectVisibility,
@@ -583,33 +584,36 @@ export class S3Driver implements DriverContract {
   /**
    * Copies the source file to the destination. Both paths must
    * be within the root location.
+   *
+   * Use the "destinationBucket" option to copy the file to a different bucket.
    */
-  async copy(source: string, destination: string, options?: WriteOptions): Promise<void> {
+  async copy(source: string, destination: string, options?: CopyMoveOptions): Promise<void> {
+    const { destinationBucket, ...writeOptions } = options || {}
+    const targetBucket = destinationBucket || this.options.bucket
+
     debug(
       'copying file from %s:%s to %s:%s',
       this.options.bucket,
       source,
-      this.options.bucket,
+      targetBucket,
       destination
     )
-
-    options = options || {}
 
     /**
      * Copy visibility from the source file to the
      * destination when no inline visibility is
      * defined
      */
-    if (!options.visibility && this.#supportsACL) {
-      options.visibility = await this.getVisibility(source)
+    if (!writeOptions.visibility && this.#supportsACL) {
+      writeOptions.visibility = await this.getVisibility(source)
     }
 
     await this.#client.send(
       this.createCopyObjectCommand(this.#client, {
-        ...this.#getSaveOptions(destination, options),
+        ...this.#getSaveOptions(destination, writeOptions),
         Key: destination,
         CopySource: `/${this.options.bucket}/${source}`,
-        Bucket: this.options.bucket,
+        Bucket: targetBucket,
       })
     )
   }
@@ -617,15 +621,13 @@ export class S3Driver implements DriverContract {
   /**
    * Moves the source file to the destination. Both paths must
    * be within the root location.
+   *
+   * Use the "destinationBucket" option to move the file to a different bucket.
    */
-  async move(source: string, destination: string, options?: WriteOptions): Promise<void> {
-    debug(
-      'moving file from %s:%s to %s:%s',
-      this.options.bucket,
-      source,
-      this.options.bucket,
-      destination
-    )
+  async move(source: string, destination: string, options?: CopyMoveOptions): Promise<void> {
+    const targetBucket = options?.destinationBucket || this.options.bucket
+
+    debug('moving file from %s:%s to %s:%s', this.options.bucket, source, targetBucket, destination)
 
     await this.copy(source, destination, options)
     await this.delete(source)
