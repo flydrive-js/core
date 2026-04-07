@@ -183,5 +183,5 @@ test.group('S3 Driver | copy', (group) => {
     assert.isDefined(capturedOptions)
     assert.equal(capturedOptions!.Bucket, S3_OTHER_BUCKET)
     assert.equal(capturedOptions!.CopySource, `/${S3_BUCKET}/${source}`)
-  }).pin()
+  })
 })
