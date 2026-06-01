@@ -73,6 +73,24 @@ export type UploadSignedURLOptions = {
 }
 
 /**
+ * Represents an inclusive byte range for partial reads.
+ * Both start and end must be positive integers representing
+ * absolute byte positions. Both start and end are inclusive
+ * and start counting at 0.
+ */
+export type RangeRequest = {
+  start?: number
+  end?: number
+}
+
+/**
+ * Options accepted by read operations.
+ */
+export type ReadOptions = {
+  range?: RangeRequest
+}
+
+/**
  * Representation of file snapshot. It can be persisted
  * inside any database storage.
  */
@@ -106,14 +124,14 @@ export interface DriverContract {
    * Should throw "E_CANNOT_READ_FILE" error when the file
    * does not exists.
    */
-  getStream(key: string): Promise<Readable>
+  getStream(key: string, options?: ReadOptions): Promise<Readable>
 
   /**
    * Return contents of an object for the given key as an Uint8Array.
    * Should throw "E_CANNOT_READ_FILE" error when the file
    * does not exists.
    */
-  getBytes(key: string): Promise<Uint8Array>
+  getBytes(key: string, options?: ReadOptions): Promise<Uint8Array>
 
   /**
    * Return metadata of an object for the given key.

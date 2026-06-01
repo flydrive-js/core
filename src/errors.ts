@@ -112,3 +112,11 @@ export const E_PATH_TRAVERSAL_DETECTED = createError<[key: string]>(
   'Path traversal segment detected in key "%s"',
   'E_PATH_TRAVERSAL_DETECTED'
 )
+
+/**
+ * The requested byte range is invalid or not satisfiable
+ */
+export const E_RANGE_UNSATISFIABLE = createError<[key: string]>(
+  'The specified range is invalid or exceeds the file size for "%s"',
+  'E_RANGE_UNSATISFIABLE'
+)

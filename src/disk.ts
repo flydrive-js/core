@@ -16,6 +16,7 @@ import { DriveFile } from './driver_file.js'
 import { KeyNormalizer } from './key_normalizer.js'
 import { type DriveDirectory } from './drive_directory.js'
 import type {
+  ReadOptions,
   WriteOptions,
   FileSnapshot,
   ObjectMetaData,
@@ -76,15 +77,15 @@ export class Disk {
   /**
    * Returns file contents as a Readable stream.
    */
-  getStream(key: string): Promise<Readable> {
-    return this.file(key).getStream()
+  getStream(key: string, options?: ReadOptions): Promise<Readable> {
+    return this.file(key).getStream(options)
   }
 
   /**
    * Returns file contents as a Uint8Array.
    */
-  getBytes(key: string): Promise<Uint8Array> {
-    return this.file(key).getBytes()
+  getBytes(key: string, options?: ReadOptions): Promise<Uint8Array> {
+    return this.file(key).getBytes(options)
   }
 
   /**

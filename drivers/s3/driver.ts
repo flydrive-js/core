@@ -37,7 +37,13 @@ import debug from './debug.js'
 import { type S3DriverOptions } from './types.js'
 import { DriveFile } from '../../src/driver_file.js'
 import { DriveDirectory } from '../../src/drive_directory.js'
+import {
+  isRangeRequest,
+  validateRangeRequest,
+  validateRangeSatisfiable,
+} from '../../src/range_utils.js'
 import type {
+  ReadOptions,
   WriteOptions,
   CopyMoveOptions,
   DriverContract,
@@ -314,35 +320,47 @@ export class S3Driver implements DriverContract {
   }
 
   /**
-   * Returns the contents of the file as a Readable stream. An
-   * exception is thrown when the file is missing.
+   * Sends a GetObjectCommand with optional range request handling
    */
-  async getStream(key: string): Promise<Readable> {
-    debug('reading file contents as a stream %s:%s', this.options.bucket, key)
-    const response = await this.#client.send(
+  async #getObject(key: string, options?: ReadOptions) {
+    let rangeHeader = {}
+    if (isRangeRequest(options?.range)) {
+      validateRangeRequest(key, options.range)
+      const head = await this.#client.send(
+        this.createHeadObjectCommand(this.#client, { Key: key, Bucket: this.options.bucket })
+      )
+      validateRangeSatisfiable(key, options.range, head.ContentLength!)
+      rangeHeader = { Range: `bytes=${options.range.start ?? 0}-${options.range.end ?? ''}` }
+    }
+    return this.#client.send(
       this.createGetObjectCommand(this.#client, {
         Key: key,
         Bucket: this.options.bucket,
+        ...rangeHeader,
       })
     )
+  }
 
-    return response.Body! as Readable
+  /**
+   * Returns the contents of the file as a Readable stream. An
+   * exception is thrown when the file is missing.
+   * When a range is provided, only the specified bytes are streamed.
+   */
+  async getStream(key: string, options?: ReadOptions): Promise<Readable> {
+    debug('reading file contents as a stream %s:%s', this.options.bucket, key)
+    const { Body } = await this.#getObject(key, options)
+    return Body! as Readable
   }
 
   /**
    * Returns the contents of the file as an Uint8Array. An
    * exception is thrown when the file is missing.
+   * When a range is provided, only the specified bytes are returned.
    */
-  async getBytes(key: string): Promise<Uint8Array> {
+  async getBytes(key: string, options?: ReadOptions): Promise<Uint8Array> {
     debug('reading file contents as array buffer %s:%s', this.options.bucket, key)
-    const response = await this.#client.send(
-      this.createGetObjectCommand(this.#client, {
-        Key: key,
-        Bucket: this.options.bucket,
-      })
-    )
-
-    return response.Body!.transformToByteArray()
+    const { Body } = await this.#getObject(key, options)
+    return Body!.transformToByteArray()
   }
 
   /**
