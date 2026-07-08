@@ -13,6 +13,7 @@ import { type Readable } from 'node:stream'
 import * as errors from './errors.js'
 import { KeyNormalizer } from './key_normalizer.js'
 import type {
+  ReadOptions,
   DriverContract,
   FileSnapshot,
   ObjectMetaData,
@@ -92,9 +93,9 @@ export class DriveFile {
   /**
    * Returns file contents as a Readable stream.
    */
-  async getStream(): Promise<Readable> {
+  async getStream(options?: ReadOptions): Promise<Readable> {
     try {
-      return await this.#driver.getStream(this.key)
+      return await this.#driver.getStream(this.key, options)
     } catch (error) {
       throw new errors.E_CANNOT_READ_FILE([this.key], { cause: error })
     }
@@ -103,9 +104,9 @@ export class DriveFile {
   /**
    * Returns file contents as a Uint8Array.
    */
-  async getBytes(): Promise<Uint8Array> {
+  async getBytes(options?: ReadOptions): Promise<Uint8Array> {
     try {
-      return await this.#driver.getBytes(this.key)
+      return await this.#driver.getBytes(this.key, options)
     } catch (error) {
       throw new errors.E_CANNOT_READ_FILE([this.key], { cause: error })
     }

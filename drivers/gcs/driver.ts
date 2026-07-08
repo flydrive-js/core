@@ -8,6 +8,7 @@
  */
 
 import { type Readable } from 'node:stream'
+import { buffer } from 'node:stream/consumers'
 import string from '@poppinss/utils/string'
 import {
   Storage,
@@ -21,7 +22,13 @@ import debug from './debug.js'
 import type { GCSDriverOptions } from './types.js'
 import { DriveFile } from '../../src/driver_file.js'
 import { DriveDirectory } from '../../src/drive_directory.js'
+import {
+  isRangeRequest,
+  validateRangeRequest,
+  validateRangeSatisfiable,
+} from '../../src/range_utils.js'
 import type {
+  ReadOptions,
   WriteOptions,
   CopyMoveOptions,
   ObjectMetaData,
@@ -154,6 +161,20 @@ export class GCSDriver implements DriverContract {
   }
 
   /**
+   * Creates a readable stream for the given key, optionally restricted to a byte range.
+   */
+  async #createReadStream(key: string, options?: ReadOptions): Promise<Readable> {
+    const file = this.#storage.bucket(this.options.bucket).file(key)
+    if (isRangeRequest(options?.range)) {
+      validateRangeRequest(key, options.range)
+      const [metadata] = await file.getMetadata()
+      const size = Number(metadata.size)
+      validateRangeSatisfiable(key, options.range, size)
+    }
+    return file.createReadStream(options?.range)
+  }
+
+  /**
    * Returns a boolean indicating if the file exists
    * or not.
    */
@@ -180,22 +201,24 @@ export class GCSDriver implements DriverContract {
   /**
    * Returns the contents of the file as a Readable stream. An
    * exception is thrown when the file is missing.
+   * When a range is provided, only the specified bytes are streamed.
    */
-  async getStream(key: string): Promise<Readable> {
+  async getStream(key: string, options?: ReadOptions): Promise<Readable> {
     debug('reading file contents as a stream %s:%s', this.options.bucket, key)
-    const bucket = this.#storage.bucket(this.options.bucket)
-
-    return bucket.file(key).createReadStream()
+    return this.#createReadStream(key, options)
   }
 
   /**
    * Returns the contents of the file as an Uint8Array. An
    * exception is thrown when the file is missing.
+   * When a range is provided, only the specified bytes are returned.
    */
-  async getBytes(key: string): Promise<Uint8Array> {
+  async getBytes(key: string, options?: ReadOptions): Promise<Uint8Array> {
     debug('reading file contents as array buffer %s:%s', this.options.bucket, key)
+    if (isRangeRequest(options?.range)) {
+      return new Uint8Array(await buffer(await this.#createReadStream(key, options)))
+    }
     const bucket = this.#storage.bucket(this.options.bucket)
-
     const response = await bucket.file(key).download()
     return new Uint8Array(response[0])
   }

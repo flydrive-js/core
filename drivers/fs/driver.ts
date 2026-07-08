@@ -12,6 +12,7 @@ import mimeTypes from 'mime-types'
 import * as fsp from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
 import { type Readable } from 'node:stream'
+import { buffer } from 'node:stream/consumers'
 import string from '@poppinss/utils/string'
 import { Retrier } from '@humanwhocodes/retry'
 import { dirname, join, relative } from 'node:path'
@@ -22,7 +23,13 @@ import debug from './debug.js'
 import type { FSDriverOptions } from './types.js'
 import { DriveFile } from '../../src/driver_file.js'
 import { DriveDirectory } from '../../src/drive_directory.js'
+import {
+  isRangeRequest,
+  validateRangeRequest,
+  validateRangeSatisfiable,
+} from '../../src/range_utils.js'
 import type {
+  ReadOptions,
   WriteOptions,
   ObjectMetaData,
   DriverContract,
@@ -103,6 +110,19 @@ export class FSDriver implements DriverContract {
   }
 
   /**
+   * Creates a readable stream for the given key, optionally restricted to a byte range.
+   */
+  async #createReadStream(key: string, options?: ReadOptions): Promise<Readable> {
+    const location = join(this.#rootUrl, key)
+    if (isRangeRequest(options?.range)) {
+      validateRangeRequest(key, options.range)
+      const { size } = await fsp.stat(location)
+      validateRangeSatisfiable(key, options.range, size)
+    }
+    return createReadStream(location, options?.range)
+  }
+
+  /**
    * Synchronously check if a file exists
    */
   existsSync(key: string): boolean {
@@ -140,19 +160,23 @@ export class FSDriver implements DriverContract {
   /**
    * Returns the contents of the file as a stream. An
    * exception is thrown when the file is missing.
+   * When a range is provided, only the specified bytes are streamed.
    */
-  async getStream(key: string): Promise<Readable> {
+  async getStream(key: string, options?: ReadOptions): Promise<Readable> {
     debug('reading file contents as a stream %s:%s', this.#rootUrl, key)
-    const location = join(this.#rootUrl, key)
-    return createReadStream(location)
+    return this.#createReadStream(key, options)
   }
 
   /**
    * Returns the contents of the file as an Uint8Array. An
    * exception is thrown when the file is missing.
+   * When a range is provided, only the specified bytes are returned.
    */
-  async getBytes(key: string): Promise<Uint8Array> {
+  async getBytes(key: string, options?: ReadOptions): Promise<Uint8Array> {
     debug('reading file contents as array buffer %s:%s', this.#rootUrl, key)
+    if (isRangeRequest(options?.range)) {
+      return new Uint8Array(await buffer(await this.#createReadStream(key, options)))
+    }
     return this.#read(key).then((value) => new Uint8Array(value.buffer))
   }
 

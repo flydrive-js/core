@@ -109,6 +109,47 @@ test.group('S3 Driver | getBytes', (group) => {
       await s3fs.getBytes(key)
     }, /UnknownError|The specified key does not exist/)
   })
+
+  test('get file contents for range - {label}')
+    .with([
+      { label: 'start and end', range: { start: 3, end: 7 }, expected: 'lo wo' },
+      { label: 'start only', range: { start: 6 }, expected: 'world' },
+      { label: 'end only', range: { end: 4 }, expected: 'Hello' },
+      { label: 'single byte', range: { start: 0, end: 0 }, expected: 'H' },
+      { label: 'empty object', range: {}, expected: 'Hello world' },
+    ])
+    .run(async ({ assert }, { range, expected }) => {
+      const key = `${string.random(6)}.txt`
+      const s3fs = new S3Driver({
+        visibility: 'public',
+        client: client,
+        bucket: S3_BUCKET,
+        supportsACL: SUPPORTS_ACL,
+      })
+      await s3fs.put(key, 'Hello world')
+      assert.equal(new TextDecoder().decode(await s3fs.getBytes(key, { range })), expected)
+    })
+
+  test('throws E_RANGE_UNSATISFIABLE - {label}')
+    .with([
+      { label: 'invalid range syntax', range: { start: -1 } },
+      { label: 'range exceeds file size', range: { start: 0, end: 99999 } },
+      { label: 'start exceeds file size', range: { start: 99999 } },
+    ])
+    .run(async ({ assert }, { range }) => {
+      const key = `${string.random(6)}.txt`
+      const s3fs = new S3Driver({
+        visibility: 'public',
+        client: client,
+        bucket: S3_BUCKET,
+        supportsACL: SUPPORTS_ACL,
+      })
+      await s3fs.put(key, 'Hello world')
+      await assert.rejects(
+        async () => s3fs.getBytes(key, { range }),
+        /The specified range is invalid or exceeds the file size/
+      )
+    })
 })
 
 test.group('S3 Driver | getStream', (group) => {
@@ -147,4 +188,45 @@ test.group('S3 Driver | getStream', (group) => {
       await getStream(await s3fs.getStream(key))
     }, /UnknownError|The specified key does not exist/)
   })
+
+  test('get file contents for range - {label}')
+    .with([
+      { label: 'start and end', range: { start: 3, end: 7 }, expected: 'lo wo' },
+      { label: 'start only', range: { start: 6 }, expected: 'world' },
+      { label: 'end only', range: { end: 4 }, expected: 'Hello' },
+      { label: 'single byte', range: { start: 0, end: 0 }, expected: 'H' },
+      { label: 'empty object', range: {}, expected: 'Hello world' },
+    ])
+    .run(async ({ assert }, { range, expected }) => {
+      const key = `${string.random(6)}.txt`
+      const s3fs = new S3Driver({
+        visibility: 'public',
+        client: client,
+        bucket: S3_BUCKET,
+        supportsACL: SUPPORTS_ACL,
+      })
+      await s3fs.put(key, 'Hello world')
+      assert.equal(await getStream(await s3fs.getStream(key, { range })), expected)
+    })
+
+  test('throws E_RANGE_UNSATISFIABLE - {label}')
+    .with([
+      { label: 'invalid range syntax', range: { start: -1 } },
+      { label: 'range exceeds file size', range: { start: 0, end: 99999 } },
+      { label: 'start exceeds file size', range: { start: 99999 } },
+    ])
+    .run(async ({ assert }, { range }) => {
+      const key = `${string.random(6)}.txt`
+      const s3fs = new S3Driver({
+        visibility: 'public',
+        client: client,
+        bucket: S3_BUCKET,
+        supportsACL: SUPPORTS_ACL,
+      })
+      await s3fs.put(key, 'Hello world')
+      await assert.rejects(
+        async () => s3fs.getStream(key, { range }),
+        /The specified range is invalid or exceeds the file size/
+      )
+    })
 })
