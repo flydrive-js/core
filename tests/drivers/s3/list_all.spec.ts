@@ -99,6 +99,14 @@ test.group('S3 Driver | listAll | root dir', (group) => {
     }
 
     const { objects } = await s3fs.listAll('/', { recursive: true })
+
+    for (const object of objects) {
+      if (object.isFile) {
+        const metadata = await object.getMetaData()
+        assert.equal(metadata.contentLength, 11)
+      }
+    }
+
     assert.includeDeepMembers(Array.from(objects), [
       {
         isDirectory: false,
