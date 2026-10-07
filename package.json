@@ -87,6 +87,14 @@
       "optional": true
     }
   },
+  "overrides": {
+    "release-it": {
+      "undici": "^7.29.1"
+    },
+    "gaxios": {
+      "uuid": "^11.1.1"
+    }
+  },
   "homepage": "https://github.com/flydrive-js/core#readme",
   "repository": {
     "type": "git",
