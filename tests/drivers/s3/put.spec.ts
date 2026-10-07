@@ -154,6 +154,12 @@ test.group('S3 Driver | put', (group) => {
     assert.equal(response.CacheControl, 'no-cache')
     assert.equal(response.ContentDisposition, 'attachment')
     assert.equal(response.ContentLanguage, 'en-IN')
+
+    /**
+     * Consume the body to release the underlying socket. Otherwise, the
+     * process stays alive until the server closes the connection.
+     */
+    await response.Body!.transformToString()
   })
 
   test('create file with local visibility', async ({ assert }) => {
