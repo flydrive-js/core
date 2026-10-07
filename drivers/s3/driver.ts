@@ -31,6 +31,7 @@ import {
   type DeleteObjectCommandInput,
   type ListObjectsV2CommandInput,
   type DeleteObjectsCommandInput,
+  type _Object,
 } from '@aws-sdk/client-s3'
 
 import debug from './debug.js'
@@ -89,7 +90,7 @@ export class S3Driver implements DriverContract {
   #createFileMetaData(apiFile: HeadObjectOutput) {
     const metaData: ObjectMetaData = {
       contentType: apiFile.ContentType,
-      contentLength: apiFile.ContentLength!,
+      contentLength: apiFile.ContentLength ?? (apiFile as _Object).Size ?? 0,
       etag: apiFile.ETag!,
       lastModified: new Date(apiFile.LastModified!),
     }
