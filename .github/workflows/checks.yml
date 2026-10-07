@@ -45,6 +45,7 @@ jobs:
     concurrency:
       group: gcs
     strategy:
+      max-parallel: 1
       matrix:
         os: [ubuntu-latest]
         node-version:
@@ -72,6 +73,7 @@ jobs:
     concurrency:
       group: s3
     strategy:
+      max-parallel: 1
       matrix:
         os: [ubuntu-latest]
         node-version:
@@ -103,6 +105,7 @@ jobs:
     concurrency:
       group: r2
     strategy:
+      max-parallel: 1
       matrix:
         os: [ubuntu-latest]
         node-version:
