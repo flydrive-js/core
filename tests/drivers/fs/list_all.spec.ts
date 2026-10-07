@@ -61,7 +61,7 @@ test.group('FS Driver | listAll | root dir', () => {
         isDirectory: false,
         isFile: true,
         name: 'hello.txt',
-        key: 'hello.txt',
+        key: 'baz/hello.txt',
       },
       {
         isDirectory: false,
@@ -73,7 +73,7 @@ test.group('FS Driver | listAll | root dir', () => {
         isDirectory: false,
         isFile: true,
         name: 'hello.txt',
-        key: 'baz/hello.txt',
+        key: 'hello.txt',
       },
     ])
   })

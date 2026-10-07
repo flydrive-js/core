@@ -598,7 +598,7 @@ test.group('Disk | listAll', () => {
         isDirectory: false,
         isFile: true,
         name: 'hello.txt',
-        key: 'hello.txt',
+        key: 'baz/hello.txt',
       },
       {
         isDirectory: false,
@@ -610,7 +610,7 @@ test.group('Disk | listAll', () => {
         isDirectory: false,
         isFile: true,
         name: 'hello.txt',
-        key: 'baz/hello.txt',
+        key: 'hello.txt',
       },
     ])
   })

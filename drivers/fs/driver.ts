@@ -404,9 +404,24 @@ export class FSDriver implements DriverContract {
     debug('listing files from folder %s:%s %O', this.#rootUrl, prefix, options)
 
     /**
-     * Reading files with their types.
+     * Reading files with their types. The entries are sorted by their
+     * unix style relative path, since the order of "readdir" results
+     * varies across platforms and Node.js versions.
      */
-    const files = await this.#readDir(location, recursive)
+    const dirents = await this.#readDir(location, recursive)
+    const files = dirents
+      .map((file) => {
+        const relativeName = string.toUnixSlash(
+          relative(
+            self.#rootUrl,
+            join(file.parentPath ?? ('path' in file ? file.path : ''), file.name)
+          )
+        )
+        return { file, relativeName }
+      })
+      .sort((a, b) =>
+        a.relativeName < b.relativeName ? -1 : a.relativeName > b.relativeName ? 1 : 0
+      )
 
     /**
      * The generator is used to lazily iterate over files and
@@ -415,13 +430,7 @@ export class FSDriver implements DriverContract {
     function* filesGenerator(): Iterator<
       DriveFile | { isFile: false; isDirectory: true; prefix: string; name: string }
     > {
-      for (const file of files) {
-        const relativeName = string.toUnixSlash(
-          relative(
-            self.#rootUrl,
-            join(file.parentPath ?? ('path' in file ? file.path : ''), file.name)
-          )
-        )
+      for (const { file, relativeName } of files) {
         if (file.isFile()) {
           yield new DriveFile(relativeName, self)
         } else if (!recursive) {
