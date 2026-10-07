@@ -12,7 +12,9 @@ import { buffer } from 'node:stream/consumers'
 import string from '@poppinss/utils/string'
 import {
   Storage,
+  type File,
   type SaveOptions,
+  type CopyOptions,
   type FileMetadata,
   type GetFilesOptions,
   type GetSignedUrlConfig,
@@ -102,6 +104,65 @@ export class GCSDriver implements DriverContract {
     }
 
     debug('gcs write options %O', gcsOptions)
+    return gcsOptions
+  }
+
+  /**
+   * Returns GCS options for the copy and the move operations. The
+   * shape is different from the save options, because GCS accepts
+   * known metadata properties as top-level options during copy.
+   */
+  async #getCopyOptions(sourceFile: File, options?: WriteOptions): Promise<CopyOptions> {
+    /**
+     * Destructuring known properties and creating a new object
+     * with the rest of unknown properties.
+     */
+    const {
+      visibility, // used locally
+      contentLength, // not entertained by GCS
+      metadata, // merged with the source file custom metadata
+      contentType,
+      cacheControl,
+      contentEncoding,
+      contentLanguage,
+      contentDisposition,
+      ...rest // forwarded as it is
+    } = options || {}
+
+    const gcsOptions: CopyOptions & { contentLanguage?: string } = { ...rest }
+    const overrides = {
+      contentType,
+      cacheControl,
+      contentEncoding,
+      contentLanguage,
+      contentDisposition,
+    }
+
+    /**
+     * GCS replaces the entire metadata of the destination file when
+     * one or more metadata properties are defined. Therefore, we
+     * merge the overrides with the metadata of the source file.
+     */
+    if (metadata || Object.values(overrides).some((value) => value !== undefined)) {
+      const [sourceMetadata] = await sourceFile.getMetadata()
+      gcsOptions.contentType = contentType ?? sourceMetadata.contentType
+      gcsOptions.cacheControl = cacheControl ?? sourceMetadata.cacheControl
+      gcsOptions.contentEncoding = contentEncoding ?? sourceMetadata.contentEncoding
+      gcsOptions.contentLanguage = contentLanguage ?? sourceMetadata.contentLanguage
+      gcsOptions.contentDisposition = contentDisposition ?? sourceMetadata.contentDisposition
+      gcsOptions.metadata = { ...sourceMetadata.metadata, ...metadata }
+    }
+
+    /**
+     * Assign ACL to the object when not using uniform ACL
+     * on the bucket or project.
+     */
+    if (this.#usingUniformAcl === false) {
+      const isPublic = (visibility || this.options.visibility) === 'public'
+      gcsOptions.predefinedAcl = isPublic ? 'publicRead' : 'private'
+    }
+
+    debug('gcs copy options %O', gcsOptions)
     return gcsOptions
   }
 
@@ -436,7 +497,8 @@ export class GCSDriver implements DriverContract {
       ? this.#storage.bucket(destinationBucket).file(destination)
       : destination
 
-    await sourceBucket.file(source).copy(target, this.#getSaveOptions(writeOptions))
+    const sourceFile = sourceBucket.file(source)
+    await sourceFile.copy(target, await this.#getCopyOptions(sourceFile, writeOptions))
   }
 
   /**
@@ -467,7 +529,8 @@ export class GCSDriver implements DriverContract {
       ? this.#storage.bucket(destinationBucket).file(destination)
       : destination
 
-    await sourceBucket.file(source).move(target, this.#getSaveOptions(writeOptions))
+    const sourceFile = sourceBucket.file(source)
+    await sourceFile.move(target, await this.#getCopyOptions(sourceFile, writeOptions))
   }
 
   /**

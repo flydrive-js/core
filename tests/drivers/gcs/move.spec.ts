@@ -119,6 +119,99 @@ test.group('GCS Driver | move', (group) => {
     assert.isFalse(existsResponse[0])
   })
 
+  test('override source file metadata during move', async ({ assert }) => {
+    const source = `${string.random(10)}.txt`
+    const destination = `${string.random(10)}.txt`
+    const contents = 'Hello world'
+
+    const fdgcs = new GCSDriver({
+      visibility: 'public',
+      bucket: GCS_BUCKET,
+      credentials: GCS_KEY,
+      usingUniformAcl: true,
+    })
+
+    await fdgcs.put(source, contents, {
+      contentType: 'text/plain',
+      cacheControl: 'no-cache',
+    })
+
+    await fdgcs.move(source, destination, {
+      contentType: 'image/png',
+      cacheControl: 'public, max-age=3600',
+      contentDisposition: 'attachment',
+    })
+
+    const [metaData] = await bucket.file(destination).getMetadata()
+    assert.equal(metaData.contentType, 'image/png')
+    assert.equal(metaData.cacheControl, 'public, max-age=3600')
+    assert.equal(metaData.contentDisposition, 'attachment')
+
+    /**
+     * Known options should not leak into the custom metadata
+     * of the destination file
+     */
+    assert.notProperty(metaData.metadata ?? {}, 'contentType')
+    assert.notProperty(metaData.metadata ?? {}, 'cacheControl')
+  })
+
+  test('retain other metadata properties when overriding one during move', async ({ assert }) => {
+    const source = `${string.random(10)}.txt`
+    const destination = `${string.random(10)}.txt`
+    const contents = 'Hello world'
+
+    const fdgcs = new GCSDriver({
+      visibility: 'public',
+      bucket: GCS_BUCKET,
+      credentials: GCS_KEY,
+      usingUniformAcl: true,
+    })
+
+    await fdgcs.put(source, contents, {
+      contentType: 'image/png',
+      cacheControl: 'no-cache',
+      metadata: {
+        contentLanguage: 'en',
+        metadata: { foo: 'bar' },
+      },
+    })
+
+    await fdgcs.move(source, destination, {
+      cacheControl: 'public, max-age=3600',
+    })
+
+    const [metaData] = await bucket.file(destination).getMetadata()
+    assert.equal(metaData.contentType, 'image/png')
+    assert.equal(metaData.contentLanguage, 'en')
+    assert.equal(metaData.cacheControl, 'public, max-age=3600')
+    assert.deepEqual(metaData.metadata, { foo: 'bar' })
+  })
+
+  test('override source file visibility during move', async ({ assert }) => {
+    const source = `${string.random(10)}.txt`
+    const destination = `${string.random(10)}.txt`
+    const contents = 'Hello world'
+
+    const fdgcs = new GCSDriver({
+      visibility: 'public',
+      bucket: GCS_FINE_GRAINED_ACL_BUCKET,
+      credentials: GCS_KEY,
+      usingUniformAcl: false,
+    })
+
+    await fdgcs.put(source, contents, {
+      contentType: 'image/png',
+      visibility: 'private',
+    })
+
+    await fdgcs.move(source, destination, { visibility: 'public' })
+    const metaData = await fdgcs.getMetaData(destination)
+    const visibility = await fdgcs.getVisibility(destination)
+
+    assert.equal(visibility, 'public')
+    assert.equal(metaData.contentType, 'image/png')
+  })
+
   test('move file with explicit bucket option', async ({ assert }) => {
     const source = `${string.random(10)}.txt`
     const destination = `${string.random(10)}.txt`
