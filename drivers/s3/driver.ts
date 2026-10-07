@@ -296,7 +296,7 @@ export class S3Driver implements DriverContract {
         })
       )
       return response.$metadata.httpStatusCode === 200
-    } catch (error) {
+    } catch (error: any) {
       if (error.$metadata?.httpStatusCode === 404) {
         return false
       }

@@ -72,7 +72,7 @@ test.group('Disk | GCS | copyFromFs', (group) => {
     const disk = new Disk(fdgcs)
     try {
       await disk.copyFromFs(join(fs.basePath, source), destination)
-    } catch (error) {
+    } catch (error: any) {
       assert.instanceOf(error, errors.E_CANNOT_WRITE_FILE)
       assert.equal(error.message, `Cannot write file at location "${destination}"`)
       assert.match(error.cause.message, /ENOENT: no such file or directory/)
@@ -124,7 +124,7 @@ test.group('Disk | GCS | moveFromFs', (group) => {
     const disk = new Disk(fdgcs)
     try {
       await disk.moveFromFs(join(fs.basePath, source), destination)
-    } catch (error) {
+    } catch (error: any) {
       assert.instanceOf(error, errors.E_CANNOT_WRITE_FILE)
       assert.equal(error.message, `Cannot write file at location "${destination}"`)
       assert.match(error.cause.message, /ENOENT: no such file or directory/)
@@ -174,7 +174,7 @@ test.group('Disk | setVisibility', (group) => {
     const disk = new Disk(fdgcs)
     try {
       await disk.setVisibility(key, 'private')
-    } catch (error) {
+    } catch (error: any) {
       assert.instanceOf(error, errors.E_CANNOT_SET_VISIBILITY)
       assert.equal(error.message, `Unable to set visibility for file at location "${key}"`)
       assert.match(error.cause.message, /Cannot update access control for an object when uniform/)

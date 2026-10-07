@@ -86,7 +86,7 @@ export class FSDriver implements DriverContract {
         recursive,
         withFileTypes: true,
       })
-    } catch (error) {
+    } catch (error: any) {
       if (error.code !== 'ENOENT') {
         throw error
       }
@@ -140,7 +140,7 @@ export class FSDriver implements DriverContract {
     try {
       const object = await fsp.stat(location)
       return object.isFile()
-    } catch (error) {
+    } catch (error: any) {
       if (error.code === 'ENOENT') {
         return false
       }
@@ -355,7 +355,7 @@ export class FSDriver implements DriverContract {
     return this.#retrier.retry(async () => {
       try {
         await fsp.unlink(location)
-      } catch (error) {
+      } catch (error: any) {
         if (error.code !== 'ENOENT') {
           throw error
         }

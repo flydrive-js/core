@@ -37,7 +37,7 @@ test.group('Disk | get', () => {
 
     try {
       await disk.get(key)
-    } catch (error) {
+    } catch (error: any) {
       assert.instanceOf(error, errors.E_CANNOT_READ_FILE)
       assert.equal(error.message, 'Cannot read file from location "hello.txt"')
       assert.match(error.cause.message, /ENOENT: no such file or directory, open/)
@@ -66,7 +66,7 @@ test.group('Disk | getStream', () => {
 
     try {
       await getStream(await disk.getStream(key))
-    } catch (error) {
+    } catch (error: any) {
       assert.notInstanceOf(error, errors.E_CANNOT_READ_FILE)
       assert.match(error.message, /ENOENT: no such file or directory, open/)
     }
@@ -94,7 +94,7 @@ test.group('Disk | getBytes', () => {
 
     try {
       await disk.getBytes(key)
-    } catch (error) {
+    } catch (error: any) {
       assert.instanceOf(error, errors.E_CANNOT_READ_FILE)
       assert.equal(error.message, 'Cannot read file from location "hello.txt"')
       assert.match(error.cause.message, /ENOENT: no such file or directory, open/)
@@ -156,7 +156,7 @@ test.group('Disk | getMetaData', () => {
 
     try {
       await disk.getMetaData(key)
-    } catch (error) {
+    } catch (error: any) {
       assert.instanceOf(error, errors.E_CANNOT_GET_METADATA)
       assert.equal(error.message, 'Unable to retrieve metadata of file at location "hello.txt"')
       assert.match(error.cause.message, /ENOENT: no such file or directory/)
@@ -188,7 +188,7 @@ test.group('Disk | exists', () => {
 
     try {
       await disk.exists(key)
-    } catch (error) {
+    } catch (error: any) {
       assert.instanceOf(error, errors.E_CANNOT_CHECK_FILE_EXISTENCE)
       assert.equal(error.message, 'Unable to check existence for file at location "hello.txt"')
       assert.match(error.cause.message, /Failed/)
@@ -220,7 +220,7 @@ test.group('Disk | getVisibility', () => {
     const disk = new Disk(fdfs)
     try {
       await disk.getVisibility(key)
-    } catch (error) {
+    } catch (error: any) {
       assert.instanceOf(error, errors.E_CANNOT_GET_METADATA)
       assert.equal(error.message, 'Unable to retrieve metadata of file at location "hello.txt"')
       assert.match(error.cause.message, /Failed/)
@@ -263,7 +263,7 @@ test.group('Disk | getUrl', () => {
 
     try {
       await disk.getUrl(key)
-    } catch (error) {
+    } catch (error: any) {
       assert.instanceOf(error, errors.E_CANNOT_GENERATE_URL)
       assert.equal(error.message, 'Cannot generate URL for file at location "hello.txt"')
       assert.equal(error.cause.message, 'Cannot generate URL. The "fs" driver does not support it')
@@ -306,7 +306,7 @@ test.group('Disk | getSignedUrl', () => {
 
     try {
       await disk.getSignedUrl(key)
-    } catch (error) {
+    } catch (error: any) {
       assert.instanceOf(error, errors.E_CANNOT_GENERATE_URL)
       assert.equal(error.message, 'Cannot generate URL for file at location "hello.txt"')
       assert.equal(
@@ -352,7 +352,7 @@ test.group('Disk | getSignedUploadUrl', () => {
 
     try {
       await disk.getSignedUploadUrl(key)
-    } catch (error) {
+    } catch (error: any) {
       assert.instanceOf(error, errors.E_CANNOT_GENERATE_URL)
       assert.equal(error.message, 'Cannot generate URL for file at location "hello.txt"')
       assert.equal(
@@ -389,7 +389,7 @@ test.group('Disk | put', () => {
 
     try {
       await disk.put(key, contents)
-    } catch (error) {
+    } catch (error: any) {
       assert.instanceOf(error, errors.E_CANNOT_WRITE_FILE)
       assert.equal(error.message, 'Cannot write file at location "hello.txt"')
       assert.equal(error.cause.message, 'Put operation failed')
@@ -419,7 +419,7 @@ test.group('Disk | putStream', () => {
 
     try {
       await disk.putStream(key, createReadStream(join(fs.basePath, 'hello_tmp.txt')))
-    } catch (error) {
+    } catch (error: any) {
       assert.instanceOf(error, errors.E_CANNOT_WRITE_FILE)
       assert.equal(error.message, 'Cannot write file at location "hello.txt"')
       assert.match(error.cause.message, /ENOENT: no such file or directory/)
@@ -451,7 +451,7 @@ test.group('Disk | copy', () => {
 
     try {
       await disk.copy(source, desintation)
-    } catch (error) {
+    } catch (error: any) {
       assert.instanceOf(error, errors.E_CANNOT_COPY_FILE)
       assert.equal(error.message, 'Cannot copy file from "hello.txt" to "bar.txt"')
       assert.match(error.cause.message, /ENOENT: no such file or directory/)
@@ -484,7 +484,7 @@ test.group('Disk | move', () => {
 
     try {
       await disk.move(source, desintation)
-    } catch (error) {
+    } catch (error: any) {
       assert.instanceOf(error, errors.E_CANNOT_MOVE_FILE)
       assert.equal(error.message, 'Cannot move file from "hello.txt" to "bar.txt"')
       assert.match(error.cause.message, /ENOENT: no such file or directory/)
@@ -540,7 +540,7 @@ test.group('Disk | delete', () => {
 
     try {
       await disk.delete(key)
-    } catch (error) {
+    } catch (error: any) {
       assert.instanceOf(error, errors.E_CANNOT_DELETE_FILE)
       assert.equal(error.message, 'Cannot delete file at location "hello.txt"')
       assert.equal(error.cause.message, 'Delete operation failed')
@@ -573,7 +573,7 @@ test.group('Disk | deleteAll', () => {
 
     try {
       await disk.deleteAll()
-    } catch (error) {
+    } catch (error: any) {
       assert.instanceOf(error, errors.E_CANNOT_DELETE_DIRECTORY)
       assert.equal(error.message, 'Cannot delete directory at location "/"')
       assert.equal(error.cause.message, 'Delete operation failed')
