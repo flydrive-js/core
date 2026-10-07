@@ -15,6 +15,7 @@ jobs:
     uses: adonisjs/.github/.github/workflows/typecheck.yml@616f1f5863b4a3a73eb49cd0d16e8719bcd34e7a # next
 
   tests-main:
+    if: github.actor != 'dependabot[bot]'
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -39,6 +40,7 @@ jobs:
           GCS_FINE_GRAINED_ACL_BUCKET: drive-gcs-no-uniform-acl
 
   tests-gcs:
+    if: github.actor != 'dependabot[bot]'
     runs-on: ${{ matrix.os }}
     concurrency:
       group: gcs
@@ -65,6 +67,7 @@ jobs:
           GCS_FINE_GRAINED_ACL_BUCKET: drive-gcs-no-uniform-acl
 
   tests-s3:
+    if: github.actor != 'dependabot[bot]'
     runs-on: ${{ matrix.os }}
     concurrency:
       group: s3
@@ -95,6 +98,7 @@ jobs:
           S3_CDN_URL: https://testing-flydrive.sgp1.cdn.digitaloceanspaces.com
 
   tests-r2:
+    if: github.actor != 'dependabot[bot]'
     runs-on: ${{ matrix.os }}
     concurrency:
       group: r2
